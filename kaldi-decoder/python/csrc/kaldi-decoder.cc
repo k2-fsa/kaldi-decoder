@@ -3,6 +3,7 @@
 // Copyright (c)  2022  Xiaomi Corporation
 
 #include "kaldi-decoder/python/csrc/kaldi-decoder.h"
+
 #include "kaldi-decoder/python/csrc/decodable-ctc.h"
 #include "kaldi-decoder/python/csrc/decodable-itf.h"
 #include "kaldi-decoder/python/csrc/faster-decoder.h"
@@ -16,4 +17,4 @@ PYBIND11_MODULE(_kaldi_decoder, m) {
   PybindDecodableCtc(&m);
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

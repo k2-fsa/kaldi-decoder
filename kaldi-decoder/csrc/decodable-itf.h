@@ -63,7 +63,7 @@ namespace kaldi_decoder {
    frame of the file once we've decided to terminate decoding.
 */
 class DecodableInterface {
-public:
+ public:
   virtual ~DecodableInterface() = default;
 
   /// Returns the log likelihood, which will be negated in the decoder.
@@ -101,6 +101,6 @@ public:
   virtual int32_t NumIndices() const = 0;
 };
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder
 
-#endif // KALDI_DECODER_CSRC_DECODABLE_ITF_H_
+#endif  // KALDI_DECODER_CSRC_DECODABLE_ITF_H_

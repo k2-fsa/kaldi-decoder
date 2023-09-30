@@ -41,10 +41,12 @@ struct FasterDecoderOptions {
       float beam = 16.0,
       int32_t max_active = std::numeric_limits<int32_t>::max(),
       int32_t min_active = 20, float beam_delta = 0.5, float hash_ratio = 2.0)
-      : beam(beam), max_active(max_active),
-        min_active(min_active), // This decoder mostly used for
-                                // alignment, use small default.
-        beam_delta(beam_delta), hash_ratio(hash_ratio) {}
+      : beam(beam),
+        max_active(max_active),
+        min_active(min_active),  // This decoder mostly used for
+                                 // alignment, use small default.
+        beam_delta(beam_delta),
+        hash_ratio(hash_ratio) {}
 
   std::string ToString() const {
     std::ostringstream os;
@@ -61,7 +63,7 @@ struct FasterDecoderOptions {
 };
 
 class FasterDecoder {
-public:
+ public:
   typedef fst::StdArc Arc;
   typedef Arc::Label Label;
   typedef Arc::StateId StateId;
@@ -104,10 +106,10 @@ public:
   /// Returns the number of frames already decoded.
   int32_t NumFramesDecoded() const { return num_frames_decoded_; }
 
-protected:
+ protected:
   class Token {
-  public:
-    Arc arc_; // contains only the graph part of the cost;
+   public:
+    Arc arc_;  // contains only the graph part of the cost;
     // we can work out the acoustic part from difference between
     // "cost_" and prev->cost_.
     Token *prev_;
@@ -181,7 +183,7 @@ protected:
   // temp variable used in ProcessNonemitting,
   std::vector<const Elem *> queue_;
 
-  std::vector<float> tmp_array_; // used in GetCutoff.
+  std::vector<float> tmp_array_;  // used in GetCutoff.
   // make it class member to avoid internal new/delete.
 
   // Keep track of the number of frames decoded in the current file.
@@ -197,6 +199,6 @@ protected:
   void ClearToks(Elem *list);
 };
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder
 
-#endif // KALDI_DECODER_CSRC_FASTER_DECODER_H_
+#endif  // KALDI_DECODER_CSRC_FASTER_DECODER_H_

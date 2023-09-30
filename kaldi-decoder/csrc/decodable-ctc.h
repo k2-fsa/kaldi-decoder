@@ -11,7 +11,7 @@
 namespace kaldi_decoder {
 
 class DecodableCtc : public DecodableInterface {
-public:
+ public:
   explicit DecodableCtc(const FloatMatrix &feats);
 
   float LogLikelihood(int32_t frame, int32_t index) override;
@@ -23,11 +23,11 @@ public:
 
   bool IsLastFrame(int32_t frame) const override;
 
-private:
+ private:
   // it saves log_softmax output
   FloatMatrix feature_matrix_;
 };
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder
 
-#endif // KALDI_DECODER_CSRC_DECODABLE_CTC_H_
+#endif  // KALDI_DECODER_CSRC_DECODABLE_CTC_H_

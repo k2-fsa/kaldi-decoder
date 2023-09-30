@@ -13,4 +13,4 @@ void PybindDecodableCtc(py::module *m);
 
 }
 
-#endif // KALDI_DECODER_PYTHON_CSRC_DECODABLE_CTC_H_
+#endif  // KALDI_DECODER_PYTHON_CSRC_DECODABLE_CTC_H_

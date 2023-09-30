@@ -9,24 +9,26 @@
 
 #include "kaldi-decoder/csrc/hash-list.h"
 
-#include <map> // for baseline.
 #include <stdlib.h>
+
+#include <map>  // for baseline.
 
 // #include "kaldi-decoder/csrc/kaldi-math.h"
 #include "gtest/gtest.h"
 
 namespace kaldi_decoder {
 
-template <class Int, class T> void TestHashList() {
+template <class Int, class T>
+void TestHashList() {
   typedef typename HashList<Int, T>::Elem Elem;
 
   HashList<Int, T> hash;
-  hash.SetSize(200); // must be called before use.
+  hash.SetSize(200);  // must be called before use.
   std::map<Int, T> m1;
 
   for (size_t j = 0; j < 50; j++) {
-    Int key = rand() % 200;
-    T val = rand() % 50;
+    Int key = rand() % 200;  // NOLINT
+    T val = rand() % 50;     // NOLINT
     m1[key] = val;
     Elem *e = hash.Find(key);
     if (e) {
@@ -47,14 +49,15 @@ template <class Int, class T> void TestHashList() {
 
     Elem *h = hash.Clear(), *tmp;
 
-    hash.SetSize(100 + rand() % 100); // note, SetSize is relatively cheap
+    // note, SetSize is relatively cheap
+    hash.SetSize(100 + rand() % 100);  // NOLINT
     // operation as long as we are not increasing the size more than it's ever
     // previously been increased to.
 
     for (; h != nullptr; h = tmp) {
       hash.Insert(h->key + 1, h->val);
       tmp = h->tail;
-      hash.Delete(h); // think of this like calling delete.
+      hash.Delete(h);  // think of this like calling delete.
     }
 
     // Now make sure h and m2 are the same.
@@ -65,17 +68,15 @@ template <class Int, class T> void TestHashList() {
     }
 
     for (size_t j = 0; j < 10; j++) {
-      Int key = rand() % 200;
+      Int key = rand() % 200;  // NOLINT
       bool found_m1 = (m1.find(key) != m1.end());
 
-      if (found_m1)
-        m1[key];
+      if (found_m1) m1[key];
 
       Elem *e = hash.Find(key);
       KALDI_DECODER_ASSERT((e != nullptr) == found_m1);
 
-      if (found_m1)
-        KALDI_DECODER_ASSERT(m1[key] == e->val);
+      if (found_m1) KALDI_DECODER_ASSERT(m1[key] == e->val);
     }
 
     KALDI_DECODER_ASSERT(m1.size() == count);
@@ -84,7 +85,7 @@ template <class Int, class T> void TestHashList() {
   Elem *h = hash.Clear(), *tmp;
   for (; h != nullptr; h = tmp) {
     tmp = h->tail;
-    hash.Delete(h); // think of this like calling delete.
+    hash.Delete(h);  // think of this like calling delete.
   }
 }
 
@@ -99,4 +100,4 @@ TEST(HashList, Test) {
   }
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

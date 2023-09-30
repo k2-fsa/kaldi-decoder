@@ -11,4 +11,4 @@
 
 namespace py = pybind11;
 
-#endif // KALDI_DECODER_PYTHON_CSRC_KALDI_DECODER_H_
+#endif  // KALDI_DECODER_PYTHON_CSRC_KALDI_DECODER_H_

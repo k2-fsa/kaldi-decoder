@@ -14,7 +14,7 @@ namespace {
 // https://pybind11.readthedocs.io/en/stable/advanced/classes.html#overriding-virtual-functions-in-python
 // https://pybind11.readthedocs.io/en/stable/reference.html#inheritance
 class PyDecodableInterface : public DecodableInterface {
-public:
+ public:
   using DecodableInterface::DecodableInterface;
 
   float LogLikelihood(int32_t frame, int32_t index) override {
@@ -38,7 +38,7 @@ public:
   }
 };
 
-} // namespace
+}  // namespace
 
 void PybindDecodableItf(py::module *m) {
   using PyClass = DecodableInterface;
@@ -52,4 +52,4 @@ void PybindDecodableItf(py::module *m) {
       .def("num_indices", &PyClass::NumIndices);
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

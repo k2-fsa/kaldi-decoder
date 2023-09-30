@@ -14,4 +14,4 @@ void PybindDecodableCtc(py::module *m) {
       .def(py::init<const FloatMatrix &>(), py::arg("feats"));
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

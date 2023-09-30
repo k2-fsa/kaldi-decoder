@@ -14,18 +14,20 @@
 
 namespace kaldi_decoder {
 
-template <class I, class T> HashList<I, T>::HashList() {
+template <class I, class T>
+HashList<I, T>::HashList() {
   list_head_ = nullptr;
-  bucket_list_tail_ = static_cast<size_t>(-1); // invalid.
+  bucket_list_tail_ = static_cast<size_t>(-1);  // invalid.
   hash_size_ = 0;
   freed_head_ = nullptr;
 }
 
-template <class I, class T> void HashList<I, T>::SetSize(size_t size) {
+template <class I, class T>
+void HashList<I, T>::SetSize(size_t size) {
   hash_size_ = size;
   KALDI_DECODER_ASSERT(list_head_ == nullptr &&
                        bucket_list_tail_ ==
-                           static_cast<size_t>(-1)); // make sure empty.
+                           static_cast<size_t>(-1));  // make sure empty.
 
   if (size > buckets_.size()) {
     buckets_.resize(size, HashBucket(0, nullptr));
@@ -40,7 +42,7 @@ typename HashList<I, T>::Elem *HashList<I, T>::Clear() {
        cur_bucket != static_cast<size_t>(-1);
        cur_bucket = buckets_[cur_bucket].prev_bucket) {
     buckets_[cur_bucket].last_elem =
-        nullptr; // this is how we indicate "empty".
+        nullptr;  // this is how we indicate "empty".
   }
   bucket_list_tail_ = static_cast<size_t>(-1);
   Elem *ans = list_head_;
@@ -53,7 +55,8 @@ const typename HashList<I, T>::Elem *HashList<I, T>::GetList() const {
   return list_head_;
 }
 
-template <class I, class T> inline void HashList<I, T>::Delete(Elem *e) {
+template <class I, class T>
+inline void HashList<I, T>::Delete(Elem *e) {
   e->tail = freed_head_;
   freed_head_ = e;
 }
@@ -63,7 +66,7 @@ inline typename HashList<I, T>::Elem *HashList<I, T>::Find(I key) {
   size_t index = (static_cast<size_t>(key) % hash_size_);
   HashBucket &bucket = buckets_[index];
   if (bucket.last_elem == nullptr) {
-    return nullptr; // empty bucket.
+    return nullptr;  // empty bucket.
   } else {
     Elem *head = (bucket.prev_bucket == static_cast<size_t>(-1)
                       ? list_head_
@@ -75,7 +78,7 @@ inline typename HashList<I, T>::Elem *HashList<I, T>::Find(I key) {
       }
     }
 
-    return nullptr; // Not found.
+    return nullptr;  // Not found.
   }
 }
 
@@ -98,7 +101,8 @@ inline typename HashList<I, T>::Elem *HashList<I, T>::New() {
   }
 }
 
-template <class I, class T> HashList<I, T>::~HashList() {
+template <class I, class T>
+HashList<I, T>::~HashList() {
   // First test whether we had any memory leak within the
   // HashList, i.e. things for which the user did not call Delete().
   size_t num_in_list = 0, num_allocated = 0;
@@ -143,7 +147,7 @@ inline typename HashList<I, T>::Elem *HashList<I, T>::Insert(I key, T val) {
   elem->key = key;
   elem->val = val;
 
-  if (bucket.last_elem == nullptr) { // Unoccupied bucket.  Insert at
+  if (bucket.last_elem == nullptr) {  // Unoccupied bucket.  Insert at
     // head of bucket list (which is tail of regular list, they go in
     // opposite directions).
     if (bucket_list_tail_ == static_cast<size_t>(-1)) {
@@ -168,7 +172,8 @@ inline typename HashList<I, T>::Elem *HashList<I, T>::Insert(I key, T val) {
   return elem;
 }
 
-template <class I, class T> void HashList<I, T>::InsertMore(I key, T val) {
+template <class I, class T>
+void HashList<I, T>::InsertMore(I key, T val) {
   size_t index = (static_cast<size_t>(key) % hash_size_);
   HashBucket &bucket = buckets_[index];
   Elem *elem = New();
@@ -178,7 +183,7 @@ template <class I, class T> void HashList<I, T>::InsertMore(I key, T val) {
   // assume one element is already here
   KALDI_DECODER_ASSERT(bucket.last_elem != nullptr);
 
-  if (bucket.last_elem->key == key) { // standard behavior: add as last element
+  if (bucket.last_elem->key == key) {  // standard behavior: add as last element
     elem->tail = bucket.last_elem->tail;
     bucket.last_elem->tail = elem;
     bucket.last_elem = elem;
@@ -192,11 +197,11 @@ template <class I, class T> void HashList<I, T>::InsertMore(I key, T val) {
     e = e->tail;
   }
 
-  KALDI_DECODER_ASSERT(e->key == key); // not found? - should not happen
+  KALDI_DECODER_ASSERT(e->key == key);  // not found? - should not happen
   elem->tail = e->tail;
   e->tail = elem;
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder
 
-#endif // KALDI_DECODER_CSRC_HASH_LIST_INL_H_
+#endif  // KALDI_DECODER_CSRC_HASH_LIST_INL_H_

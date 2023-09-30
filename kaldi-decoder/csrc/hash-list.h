@@ -33,8 +33,9 @@
 
 namespace kaldi_decoder {
 
-template <class I, class T> class HashList {
-public:
+template <class I, class T>
+class HashList {
+ public:
   struct Elem {
     I key;
     T val;
@@ -100,33 +101,33 @@ public:
 
   ~HashList();
 
-private:
+ private:
   struct HashBucket {
-    size_t prev_bucket; // index to next bucket (-1 if list tail).  Note:
+    size_t prev_bucket;  // index to next bucket (-1 if list tail).  Note:
     // list of buckets goes in opposite direction to list of Elems.
-    Elem *last_elem; // pointer to last element in this bucket (NULL if empty)
+    Elem *last_elem;  // pointer to last element in this bucket (NULL if empty)
     inline HashBucket(size_t i, Elem *e) : prev_bucket(i), last_elem(e) {}
   };
 
-  Elem *list_head_;         // head of currently stored list.
-  size_t bucket_list_tail_; // tail of list of active hash buckets.
+  Elem *list_head_;          // head of currently stored list.
+  size_t bucket_list_tail_;  // tail of list of active hash buckets.
 
-  size_t hash_size_; // number of hash buckets.
+  size_t hash_size_;  // number of hash buckets.
 
   std::vector<HashBucket> buckets_;
 
-  Elem *freed_head_; // head of list of currently freed elements. [ready for
+  Elem *freed_head_;  // head of list of currently freed elements. [ready for
   // allocation]
 
-  std::vector<Elem *> allocated_; // list of allocated blocks.
+  std::vector<Elem *> allocated_;  // list of allocated blocks.
 
-  static const size_t allocate_block_size_ = 1024; // Number of Elements to
+  static const size_t allocate_block_size_ = 1024;  // Number of Elements to
   // allocate in one block.  Must be largish so storing allocated_ doesn't
   // become a problem.
 };
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder
 
 #include "kaldi-decoder/csrc/hash-list-inl.h"
 
-#endif // KALDI_DECODER_CSRC_HASH_LIST_H_
+#endif  // KALDI_DECODER_CSRC_HASH_LIST_H_

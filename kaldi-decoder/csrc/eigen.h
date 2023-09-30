@@ -34,6 +34,6 @@ FloatMatrix RandnMatrix(int32_t rows, int32_t cols, float mean = 0,
 
 float Randn(float mean = 0, float stddev = 1);
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder
 
-#endif // KALDI_DECODER_CSRC_EIGEN_H_
+#endif  // KALDI_DECODER_CSRC_EIGEN_H_

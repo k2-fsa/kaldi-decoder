@@ -26,7 +26,7 @@
 namespace kaldi_decoder {
 
 TEST(Eigen, Hello) {
-  Eigen::MatrixXd m(2, 2); // uninitialized; contains garbage data
+  Eigen::MatrixXd m(2, 2);  // uninitialized; contains garbage data
   EXPECT_EQ(m.size(), 2 * 2);
   EXPECT_EQ(m.rows(), 2);
   EXPECT_EQ(m.cols(), 2);
@@ -36,7 +36,7 @@ TEST(Eigen, Hello) {
   m(0, 1) = -1;
   m(1, 1) = m(1, 0) + m(0, 1);
 
-  auto m2 = m; // value semantics; create a copy
+  auto m2 = m;  // value semantics; create a copy
   m2(0, 0) = 10;
   EXPECT_EQ(m(0, 0), 3);
 
@@ -50,9 +50,9 @@ TEST(Eigen, Hello) {
   d[1] = 20;
   d[2] = 30;
   d[3] = 40;
-  EXPECT_EQ(m(0, 0), 11); // column major by default
+  EXPECT_EQ(m(0, 0), 11);  // column major by default
   EXPECT_EQ(m(1, 0), 20);
-  EXPECT_EQ(m(0, 1), 30); // it is contiguous in memory
+  EXPECT_EQ(m(0, 1), 30);  // it is contiguous in memory
   EXPECT_EQ(m(1, 1), 40);
 
   // column major
@@ -64,10 +64,10 @@ TEST(Eigen, Hello) {
   Eigen::MatrixXf a;
   EXPECT_EQ(a.size(), 0);
 
-  Eigen::Matrix3f b; // uninitialized
+  Eigen::Matrix3f b;  // uninitialized
   EXPECT_EQ(b.size(), 3 * 3);
 
-  Eigen::MatrixXf c(2, 5); // uninitialized
+  Eigen::MatrixXf c(2, 5);  // uninitialized
   EXPECT_EQ(c.size(), 2 * 5);
 
   EXPECT_EQ(c.rows(), 2);
@@ -90,10 +90,10 @@ TEST(Eigen, Hello) {
 }
 
 TEST(Eigen, Identity) {
-  auto m = Eigen::Matrix3f::Identity(); // 3x3 identity matrix
+  auto m = Eigen::Matrix3f::Identity();  // 3x3 identity matrix
   EXPECT_EQ(m.sum(), 3);
 
-  auto n = Eigen::MatrixXf::Identity(2, 3); // 2x3 identity matrix
+  auto n = Eigen::MatrixXf::Identity(2, 3);  // 2x3 identity matrix
 #if 0
   1 0 0
   0 1 0
@@ -187,7 +187,7 @@ TEST(Eigen, Resize) {
   Eigen::MatrixXf b;
   EXPECT_EQ(b.size(), 0);
 
-  b = a; // copy by value
+  b = a;  // copy by value
   EXPECT_EQ(b.rows(), 5);
   EXPECT_EQ(b.cols(), 6);
 }
@@ -199,7 +199,7 @@ TEST(Eigen, MatMul) {
   Eigen::MatrixXf b(2, 2);
   b << 3, 0, 0, 2;
 
-  Eigen::MatrixXf c = a * b; // matrix multiplication
+  Eigen::MatrixXf c = a * b;  // matrix multiplication
   EXPECT_EQ(c(0, 0), a(0, 0) * b(0, 0));
   EXPECT_EQ(c(0, 1), a(0, 1) * b(1, 1));
 
@@ -207,7 +207,7 @@ TEST(Eigen, MatMul) {
   EXPECT_EQ(c(1, 1), a(1, 1) * b(1, 1));
 
   Eigen::MatrixXf d;
-  d.noalias() = a * b; // explicitly specify that there is no alias
+  d.noalias() = a * b;  // explicitly specify that there is no alias
 
   EXPECT_EQ(d(0, 0), a(0, 0) * b(0, 0));
   EXPECT_EQ(d(0, 1), a(0, 1) * b(1, 1));
@@ -228,7 +228,7 @@ TEST(Eigen, Transpose) {
 
   Eigen::MatrixXf b(2, 2);
   b << 1, 2, 3, 4;
-  b.transposeInPlace(); // correct
+  b.transposeInPlace();  // correct
 #if 0
   1 3
   2 4
@@ -347,26 +347,26 @@ TEST(Eigen, Row) {
   Eigen::MatrixXf m(2, 3);
   m << 1, 2, 3, 4, 5, 6;
 
-  Eigen::MatrixXf a = m.row(0); // copied to a
+  Eigen::MatrixXf a = m.row(0);  // copied to a
   EXPECT_EQ(a.rows(), 1);
   EXPECT_EQ(a.cols(), 3);
 
   a(0) = 10;
   EXPECT_EQ(m(0, 0), 1);
 
-  Eigen::MatrixXf b = m.col(1); // copied to b
+  Eigen::MatrixXf b = m.col(1);  // copied to b
   EXPECT_EQ(b.rows(), 2);
   EXPECT_EQ(b.cols(), 1);
   b(0) = 10;
   EXPECT_EQ(m(0, 1), 2);
 
-  auto c = m.row(0); // c is a proxy object; no copy is created
-  c(0) = 10;         // also change m
+  auto c = m.row(0);  // c is a proxy object; no copy is created
+  c(0) = 10;          // also change m
   EXPECT_EQ(m(0, 0), 10);
   EXPECT_EQ(c.rows(), 1);
   EXPECT_EQ(c.cols(), 3);
 
-  auto d = c; // d is also a proxy
+  auto d = c;  // d is also a proxy
   d(0) = 100;
   EXPECT_EQ(c(0), 100);
   EXPECT_EQ(m(0), 100);
@@ -384,7 +384,7 @@ TEST(Eigen, Row) {
 TEST(Eigen, Sequence) {
   // (start, end)
   // Note that 5 is included here
-  auto seq = Eigen::seq(2, 5); // [2, 3, 4, 5]
+  auto seq = Eigen::seq(2, 5);  // [2, 3, 4, 5]
   EXPECT_EQ(seq.size(), 4);
   for (int32_t i = 0; i != seq.size(); ++i) {
     EXPECT_EQ(seq[i], i + 2);
@@ -392,13 +392,13 @@ TEST(Eigen, Sequence) {
 
   // start 2, end 5, increment 2,
   // (start, end, increment), note that 5 is not included here
-  auto seq2 = Eigen::seq(2, 5, 2); // [2, 4]
+  auto seq2 = Eigen::seq(2, 5, 2);  // [2, 4]
   EXPECT_EQ(seq2.size(), 2);
   EXPECT_EQ(seq2[0], 2);
   EXPECT_EQ(seq2[1], 4);
 
   // (start, sequence_length)
-  auto seq3 = Eigen::seqN(2, 5); // [2, 3, 4, 5, 6]
+  auto seq3 = Eigen::seqN(2, 5);  // [2, 3, 4, 5, 6]
   EXPECT_EQ(seq3.size(), 5);
   for (int32_t i = 0; i != seq3.size(); ++i) {
     EXPECT_EQ(seq3[i], i + 2);
@@ -711,4 +711,4 @@ TEST(Eigen, Dot) {
   EXPECT_EQ(c, 1 * 4 + 2 * 5 + 3 * 6);
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

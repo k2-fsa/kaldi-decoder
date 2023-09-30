@@ -18,40 +18,37 @@
 namespace kaldi_decoder {
 
 /// Returns true if the vector is sorted.
-template <typename T> inline bool IsSorted(const std::vector<T> &vec) {
+template <typename T>
+inline bool IsSorted(const std::vector<T> &vec) {
   typename std::vector<T>::const_iterator iter = vec.begin(), end = vec.end();
-  if (iter == end)
-    return true;
+  if (iter == end) return true;
   while (1) {
     typename std::vector<T>::const_iterator next_iter = iter;
     ++next_iter;
-    if (next_iter == end)
-      return true; // end of loop and nothing out of order
-    if (*next_iter < *iter)
-      return false;
+    if (next_iter == end) return true;  // end of loop and nothing out of order
+    if (*next_iter < *iter) return false;
     iter = next_iter;
   }
 }
 
 /// Sorts and uniq's (removes duplicates) from a vector.
-template <typename T> inline void SortAndUniq(std::vector<T> *vec) {
+template <typename T>
+inline void SortAndUniq(std::vector<T> *vec) {
   std::sort(vec->begin(), vec->end());
   vec->erase(std::unique(vec->begin(), vec->end()), vec->end());
 }
 
 /// Returns true if the vector is sorted and contains each element
 /// only once.
-template <typename T> inline bool IsSortedAndUniq(const std::vector<T> &vec) {
+template <typename T>
+inline bool IsSortedAndUniq(const std::vector<T> &vec) {
   typename std::vector<T>::const_iterator iter = vec.begin(), end = vec.end();
-  if (iter == end)
-    return true;
+  if (iter == end) return true;
   while (1) {
     typename std::vector<T>::const_iterator next_iter = iter;
     ++next_iter;
-    if (next_iter == end)
-      return true; // end of loop and nothing out of order
-    if (*next_iter <= *iter)
-      return false;
+    if (next_iter == end) return true;  // end of loop and nothing out of order
+    if (*next_iter <= *iter) return false;
     iter = next_iter;
   }
 }
@@ -62,7 +59,7 @@ inline void WriteIntegerVector(std::ostream &os, bool binary,
   // Compile time assertion that this is not called with a wrong type.
   static_assert(std::is_integral<T>::value, "");
   if (binary) {
-    char sz = sizeof(T); // this is currently just a check.
+    char sz = sizeof(T);  // this is currently just a check.
     os.write(&sz, 1);
     int32_t vecsz = static_cast<int32_t>(v.size());
     KALDI_DECODER_ASSERT((size_t)vecsz == v.size());
@@ -100,15 +97,14 @@ inline void ReadIntegerVector(std::istream &is, bool binary,
     int sz = is.peek();
     if (sz == sizeof(T)) {
       is.get();
-    } else { // this is currently just a check.
+    } else {  // this is currently just a check.
       KALDI_DECODER_ERR << "ReadIntegerVector: expected to see type of size "
                         << sizeof(T) << ", saw instead " << sz
                         << ", at file position " << is.tellg();
     }
     int32_t vecsz;
     is.read(reinterpret_cast<char *>(&vecsz), sizeof(vecsz));
-    if (is.fail() || vecsz < 0)
-      goto bad;
+    if (is.fail() || vecsz < 0) goto bad;
 
     v->resize(vecsz);
 
@@ -116,17 +112,17 @@ inline void ReadIntegerVector(std::istream &is, bool binary,
       is.read(reinterpret_cast<char *>(&((*v)[0])), sizeof(T) * vecsz);
     }
   } else {
-    std::vector<T> tmp_v; // use temporary so v doesn't use extra memory
-                          // due to resizing.
+    std::vector<T> tmp_v;  // use temporary so v doesn't use extra memory
+                           // due to resizing.
     is >> std::ws;
     if (is.peek() != static_cast<int>('[')) {
       KALDI_DECODER_ERR << "ReadIntegerVector: expected to see [, saw "
                         << is.peek() << ", at file position " << is.tellg();
     }
-    is.get();      // consume the '['.
-    is >> std::ws; // consume whitespace.
+    is.get();       // consume the '['.
+    is >> std::ws;  // consume whitespace.
     while (is.peek() != static_cast<int>(']')) {
-      if (sizeof(T) == 1) { // read/write chars as numbers.
+      if (sizeof(T) == 1) {  // read/write chars as numbers.
         int16_t next_t;
         is >> next_t >> std::ws;
         if (is.fail())
@@ -142,12 +138,11 @@ inline void ReadIntegerVector(std::istream &is, bool binary,
           tmp_v.push_back(next_t);
       }
     }
-    is.get();   // get the final ']'.
-    *v = tmp_v; // could use std::swap to use less temporary memory, but this
+    is.get();    // get the final ']'.
+    *v = tmp_v;  // could use std::swap to use less temporary memory, but this
     // uses less permanent memory.
   }
-  if (!is.fail())
-    return;
+  if (!is.fail()) return;
 bad:
   KALDI_DECODER_ERR << "ReadIntegerVector: read failure at file position "
                     << is.tellg();
@@ -155,42 +150,43 @@ bad:
 
 /// Deletes any non-NULL pointers in the vector v, and sets
 /// the corresponding entries of v to NULL
-template <class A> void DeletePointers(std::vector<A *> *v) {
+template <class A>
+void DeletePointers(std::vector<A *> *v) {
   KALDI_DECODER_ASSERT(v != nullptr);
   typename std::vector<A *>::iterator iter = v->begin(), end = v->end();
   for (; iter != end; ++iter) {
     if (*iter != nullptr) {
       delete *iter;
-      *iter = nullptr; // set to NULL for extra safety.
+      *iter = nullptr;  // set to NULL for extra safety.
     }
   }
 }
 
 /// A hashing function-object for pairs of ints
 template <typename Int1, typename Int2 = Int1>
-struct PairHasher { // hashing function for pair<int>
+struct PairHasher {  // hashing function for pair<int>
   size_t operator()(const std::pair<Int1, Int2> &x) const noexcept {
     // 7853 was chosen at random from a list of primes.
     return x.first + x.second * 7853;
   }
-  PairHasher() { // Check we're instantiated with an integer type.
+  PairHasher() {  // Check we're instantiated with an integer type.
     static_assert(std::is_integral<Int1>::value, "");
     static_assert(std::is_integral<Int2>::value, "");
   }
 };
 
 /// Returns true if the vector of pointers contains NULL pointers.
-template <class A> bool ContainsNullPointers(const std::vector<A *> &v) {
+template <class A>
+bool ContainsNullPointers(const std::vector<A *> &v) {
   typename std::vector<A *>::const_iterator iter = v.begin(), end = v.end();
   for (; iter != end; ++iter)
-    if (*iter == static_cast<A *>(nullptr))
-      return true;
+    if (*iter == static_cast<A *>(nullptr)) return true;
   return false;
 }
 
 /// A hashing function-object for vectors.
 template <typename Int>
-struct VectorHasher { // hashing function for vector<Int>.
+struct VectorHasher {  // hashing function for vector<Int>.
   size_t operator()(const std::vector<Int> &x) const noexcept {
     size_t ans = 0;
     auto iter = x.begin(), end = x.end();
@@ -200,14 +196,14 @@ struct VectorHasher { // hashing function for vector<Int>.
     }
     return ans;
   }
-  VectorHasher() { // Check we're instantiated with an integer type.
+  VectorHasher() {  // Check we're instantiated with an integer type.
     static_assert(std::is_integral<Int>::value, "");
   }
 
-private:
+ private:
   static const int kPrime = 7853;
 };
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder
 
-#endif // KALDI_DECODER_CSRC_STL_UTILS_H_
+#endif  // KALDI_DECODER_CSRC_STL_UTILS_H_

@@ -13,4 +13,4 @@ void PybindDecodableItf(py::module *m);
 
 }
 
-#endif // KALDI_DECODER_PYTHON_CSRC_DECODABLE_ITF_H_
+#endif  // KALDI_DECODER_PYTHON_CSRC_DECODABLE_ITF_H_

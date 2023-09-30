@@ -52,4 +52,4 @@ void PybindFasterDecoder(py::module *m) {
       .def("num_frames_decoded", &PyClass::NumFramesDecoded);
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

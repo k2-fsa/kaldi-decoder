@@ -28,4 +28,4 @@ bool DecodableCtc::IsLastFrame(int32_t frame) const {
   return (frame == NumFramesReady() - 1);
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

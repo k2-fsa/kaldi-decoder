@@ -22,7 +22,7 @@ FasterDecoder::FasterDecoder(const fst::Fst<fst::StdArc> &fst,
                              const FasterDecoderOptions &opts)
     : fst_(fst), config_(opts), num_frames_decoded_(-1) {
   KALDI_DECODER_ASSERT(config_.hash_ratio >=
-                       1.0); // less doesn't make much sense.
+                       1.0);  // less doesn't make much sense.
   KALDI_DECODER_ASSERT(config_.max_active > 1);
   KALDI_DECODER_ASSERT(config_.min_active >= 0 &&
                        config_.min_active < config_.max_active);
@@ -69,9 +69,9 @@ void FasterDecoder::ProcessNonemitting(double cutoff) {
     queue_.pop_back();
 
     StateId state = e->key;
-    Token *tok = e->val; // would segfault if state not
+    Token *tok = e->val;  // would segfault if state not
     // in toks_ but this can't happen.
-    if (tok->cost_ > cutoff) { // Don't bother processing successors.
+    if (tok->cost_ > cutoff) {  // Don't bother processing successors.
       continue;
     }
 
@@ -89,7 +89,7 @@ void FasterDecoder::ProcessNonemitting(double cutoff) {
 
       Token *new_tok = new Token(arc, tok);
 
-      if (new_tok->cost_ > cutoff) { // prune
+      if (new_tok->cost_ > cutoff) {  // prune
         Token::TokenDelete(new_tok);
         continue;
       }
@@ -179,7 +179,7 @@ double FasterDecoder::ProcessEmitting(DecodableInterface *decodable) {
     for (fst::ArcIterator<fst::Fst<Arc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
       const Arc &arc = aiter.Value();
-      if (arc.ilabel != 0) { // we'd propagate..
+      if (arc.ilabel != 0) {  // we'd propagate..
         float ac_cost = -1 * decodable->LogLikelihood(frame, arc.ilabel);
         double new_weight = arc.weight.Value() + tok->cost_ + ac_cost;
         if (new_weight + adaptive_beam < next_weight_cutoff)
@@ -194,21 +194,21 @@ double FasterDecoder::ProcessEmitting(DecodableInterface *decodable) {
   // 'owned' is a complex thing here; the point is we need to call TokenDelete
   // on each elem 'e' to let toks_ know we're done with them.
   for (Elem *e = last_toks, *e_tail; e != nullptr;
-       e = e_tail) { // loop this way
+       e = e_tail) {  // loop this way
     // n++;
     // because we delete "e" as we go.
     StateId state = e->key;
     Token *tok = e->val;
-    if (tok->cost_ < weight_cutoff) { // not pruned.
+    if (tok->cost_ < weight_cutoff) {  // not pruned.
       // np++;
       KALDI_DECODER_ASSERT(state == tok->arc_.nextstate);
       for (fst::ArcIterator<fst::Fst<Arc>> aiter(fst_, state); !aiter.Done();
            aiter.Next()) {
         const Arc &arc = aiter.Value();
-        if (arc.ilabel != 0) { // propagate..
+        if (arc.ilabel != 0) {  // propagate..
           float ac_cost = -1 * decodable->LogLikelihood(frame, arc.ilabel);
           double new_weight = arc.weight.Value() + tok->cost_ + ac_cost;
-          if (new_weight < next_weight_cutoff) { // not pruned..
+          if (new_weight < next_weight_cutoff) {  // not pruned..
             Token *new_tok = new Token(arc, ac_cost, tok);
             Elem *e_found = toks_.Insert(arc.nextstate, new_tok);
 
@@ -300,7 +300,7 @@ double FasterDecoder::GetCutoff(Elem *list_head, size_t *tok_count,
     max_active_cutoff = tmp_array_[config_.max_active];
   }
 
-  if (max_active_cutoff < beam_cutoff) { // max_active is tighter than beam.
+  if (max_active_cutoff < beam_cutoff) {  // max_active is tighter than beam.
     if (adaptive_beam) {
       *adaptive_beam = max_active_cutoff - best_cost + config_.beam_delta;
     }
@@ -322,7 +322,7 @@ double FasterDecoder::GetCutoff(Elem *list_head, size_t *tok_count,
     }
   }
 
-  if (min_active_cutoff > beam_cutoff) { // min_active is looser than beam.
+  if (min_active_cutoff > beam_cutoff) {  // min_active is looser than beam.
     if (adaptive_beam) {
       *adaptive_beam = min_active_cutoff - best_cost + config_.beam_delta;
     }
@@ -388,7 +388,7 @@ bool FasterDecoder::GetBestPath(fst::MutableFst<fst::LatticeArc> *fst_out,
     return false;
   }
 
-  std::vector<fst::LatticeArc> arcs_reverse; // arcs in reverse order.
+  std::vector<fst::LatticeArc> arcs_reverse;  // arcs in reverse order.
 
   for (Token *tok = best_tok; tok != nullptr; tok = tok->prev_) {
     float tot_cost = tok->cost_ - (tok->prev_ ? tok->prev_->cost_ : 0.0);
@@ -403,7 +403,7 @@ bool FasterDecoder::GetBestPath(fst::MutableFst<fst::LatticeArc> *fst_out,
 
   KALDI_DECODER_ASSERT(arcs_reverse.back().nextstate == fst_.Start());
 
-  arcs_reverse.pop_back(); // that was a "fake" token... gives no info.
+  arcs_reverse.pop_back();  // that was a "fake" token... gives no info.
 
   StateId cur_state = fst_out->AddState();
   fst_out->SetStart(cur_state);
@@ -423,4 +423,4 @@ bool FasterDecoder::GetBestPath(fst::MutableFst<fst::LatticeArc> *fst_out,
   return true;
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

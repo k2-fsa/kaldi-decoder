@@ -68,4 +68,4 @@ float Randn(float mean /*= 0*/, float stddev /*= 1*/) {
   return d(gen);
 }
 
-} // namespace kaldi_decoder
+}  // namespace kaldi_decoder

@@ -13,4 +13,4 @@ void PybindFasterDecoder(py::module *m);
 
 }
 
-#endif // KALDI_DECODER_PYTHON_CSRC_FASTER_DECODER_H_
+#endif  // KALDI_DECODER_PYTHON_CSRC_FASTER_DECODER_H_
