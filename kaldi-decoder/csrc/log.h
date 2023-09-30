@@ -96,4 +96,4 @@ public:                                                                        \
 
 } // namespace kaldi_decoder
 
-#endif // KALDI_HMM_GMM_CSRC_LOG_H_
+#endif // KALDI_DECODER_CSRC_LOG_H_

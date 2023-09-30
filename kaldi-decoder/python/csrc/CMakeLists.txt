@@ -21,7 +21,7 @@ if(APPLE)
 endif()
 
 if(NOT WIN32)
-  target_link_libraries(_kaldi_decoder PRIVATE "-Wl,-rpath,${KHG_RPATH_ORIGIN}/kaldi_decoder/lib")
+  target_link_libraries(_kaldi_decoder PRIVATE "-Wl,-rpath,${KALDI_DECODER_RPATH_ORIGIN}/kaldi_decoder/lib")
 endif()
 
 install(TARGETS _kaldi_decoder

@@ -6,7 +6,7 @@ function(download_kaldifst)
   set(kaldifst_HASH "SHA256=79280c0bb08b5ed1a2ab7c21320a2b071f1f0eb10d2f047e8d6f027f0d32b4d2")
 
   # If you don't have access to the Internet,
-  # please pre-download kaldi_native_io
+  # please pre-download kaldifst
   set(possible_file_locations
     $ENV{HOME}/Downloads/kaldifst-1.7.6.tar.gz
     ${PROJECT_SOURCE_DIR}/kaldifst-1.7.6.tar.gz
@@ -58,7 +58,7 @@ function(download_kaldifst)
   set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "kaldi-decoder-kaldi-fst-core")
   set_target_properties(fst PROPERTIES OUTPUT_NAME "kaldi-decoder-fst")
 
-  if(KHG_BUILD_PYTHON AND WIN32)
+  if(KALDI_DECODER_BUILD_PYTHON AND WIN32)
     install(TARGETS kaldifst_core fst DESTINATION ..)
   else()
     install(TARGETS kaldifst_core fst DESTINATION lib)

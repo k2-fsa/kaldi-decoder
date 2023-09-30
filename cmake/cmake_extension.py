@@ -102,7 +102,7 @@ class BuildExtension(build_ext):
         else:
             if make_args == "" and system_make_args == "":
                 print("for fast compilation, run:")
-                print('export KHG_MAKE_ARGS="-j"; python setup.py install')
+                print('export KALDI_DECODER_MAKE_ARGS="-j"; python setup.py install')
                 print('Setting make_args to "-j4"')
                 make_args = "-j4"
 
