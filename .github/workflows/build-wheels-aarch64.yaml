@@ -18,11 +18,9 @@ concurrency:
 
 jobs:
   build_wheels_aarch64:
-    if: false
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
@@ -44,6 +42,7 @@ jobs:
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/lib.linux-aarch64-cpython-37/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-38/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-39/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-310/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-311/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-312/kaldi_decoder/lib'
 
       - name: Display wheels
         shell: bash

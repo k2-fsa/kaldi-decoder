@@ -15,7 +15,6 @@ concurrency:
 
 jobs:
   build_wheels_win64:
-    if: false
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
