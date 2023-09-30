@@ -2,6 +2,8 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 # Please keep the source files alphabetically sorted
 set(srcs
+  decodable-ctc.cc
+  eigen.cc
   faster-decoder.cc
 )
 
@@ -9,10 +11,11 @@ set(srcs
 add_library(kaldi-decoder-core ${srcs})
 
 target_link_libraries(kaldi-decoder-core PUBLIC kaldifst_core)
-# target_link_libraries(kaldi-decoder-core PUBLIC fst)
+target_link_libraries(kaldi-decoder-core PUBLIC Eigen3::Eigen)
 
 if(KALDI_DECODER_ENABLE_TESTS)
   set(test_srcs
+    eigen-test.cc
     hash-list-test.cc
   )
 

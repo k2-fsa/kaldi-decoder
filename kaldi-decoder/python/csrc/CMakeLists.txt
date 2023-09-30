@@ -1,6 +1,9 @@
 include_directories(${PROJECT_SOURCE_DIR})
 
 set(srcs
+  decodable-ctc.cc
+  decodable-itf.cc
+  faster-decoder.cc
   kaldi-decoder.cc
 )
 

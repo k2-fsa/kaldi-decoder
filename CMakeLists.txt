@@ -65,6 +65,7 @@ if(KALDI_DECODER_BUILD_PYTHON)
 endif()
 
 include(kaldifst)
+include(eigen)
 
 if(KALDI_DECODER_ENABLE_TESTS)
   enable_testing()
