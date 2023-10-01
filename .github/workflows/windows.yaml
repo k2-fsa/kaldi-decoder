@@ -19,7 +19,6 @@ permissions:
 
 jobs:
   windows:
-    if: false
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
