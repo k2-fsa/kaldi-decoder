@@ -34,6 +34,12 @@ void PybindFasterDecoder(py::module *m) {
       .def(py::init<const fst::Fst<fst::StdArc> &,
                     const FasterDecoderOptions &>(),
            py::arg("fst"), py::arg("config"))
+      .def(py::init<const fst::VectorFst<fst::StdArc> &,
+                    const FasterDecoderOptions &>(),
+           py::arg("fst"), py::arg("config"))
+      .def(py::init<const fst::ConstFst<fst::StdArc> &,
+                    const FasterDecoderOptions &>(),
+           py::arg("fst"), py::arg("config"))
       .def("set_options", &PyClass::SetOptions, py::arg("config"))
       .def("decode", &PyClass::Decode, py::arg("decodable"))
       .def("reached_final", &PyClass::ReachedFinal)
