@@ -17,7 +17,7 @@ class DecodableCtc : public DecodableInterface {
 
   // It shares the memory with the input array.
   //
-  // @param p Pointer to a 2-d array  of shape (num_rows, num_rows).
+  // @param p Pointer to a 2-d array of shape (num_rows, num_cols).
   //          The array should be kept alive as long as this object is still
   //          alive.
   DecodableCtc(const float *p, int32_t num_rows, int32_t num_cols);
