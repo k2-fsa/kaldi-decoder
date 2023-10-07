@@ -12,7 +12,15 @@ namespace kaldi_decoder {
 
 class DecodableCtc : public DecodableInterface {
  public:
-  explicit DecodableCtc(const FloatMatrix &feats);
+  // It copies the input log_probs
+  explicit DecodableCtc(const FloatMatrix &log_probs);
+
+  // It shares the memory with the input array.
+  //
+  // @param p Pointer to a 2-d array  of shape (num_rows, num_rows).
+  //          The array should be kept alive as long as this object is still
+  //          alive.
+  DecodableCtc(const float *p, int32_t num_rows, int32_t num_cols);
 
   float LogLikelihood(int32_t frame, int32_t index) override;
 
@@ -25,7 +33,11 @@ class DecodableCtc : public DecodableInterface {
 
  private:
   // it saves log_softmax output
-  FloatMatrix feature_matrix_;
+  FloatMatrix log_probs_;
+
+  const float *p_ = nullptr;  // pointer to a 2-d array
+  int32_t num_rows_;          // number of rows in the 2-d array
+  int32_t num_cols_;          // number of cols in the 2-d array
 };
 
 }  // namespace kaldi_decoder
