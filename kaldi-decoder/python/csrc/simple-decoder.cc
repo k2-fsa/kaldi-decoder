@@ -4,6 +4,8 @@
 
 #include "kaldi-decoder/python/csrc/simple-decoder.h"
 
+#include <utility>
+
 #include "kaldi-decoder/csrc/simple-decoder.h"
 
 namespace kaldi_decoder {

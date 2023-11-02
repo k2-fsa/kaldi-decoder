@@ -7,9 +7,12 @@
 #ifndef KALDI_DECODER_CSRC_SIMPLE_DECODER_H_
 #define KALDI_DECODER_CSRC_SIMPLE_DECODER_H_
 
+#include <unordered_map>
+
 #include "fst/fst.h"
 #include "fst/fstlib.h"
 #include "kaldi-decoder/csrc/decodable-itf.h"
+#include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/lattice-weight.h"
 
 namespace kaldi_decoder {
@@ -102,14 +105,13 @@ class SimpleDecoder {
       while (--tok->ref_count_ == 0) {
         Token *prev = tok->prev_;
         delete tok;
-        if (prev == NULL)
+        if (prev == nullptr) {
           return;
-        else
+        } else {
           tok = prev;
+        }
       }
-#ifdef KALDI_PARANOID
-      KALDI_ASSERT(tok->ref_count_ > 0);
-#endif
+      KALDI_DECODER_ASSERT(tok->ref_count_ > 0);
     }
   };
 
@@ -124,9 +126,9 @@ class SimpleDecoder {
   const fst::Fst<fst::StdArc> &fst_;
   float beam_;
   // Keep track of the number of frames decoded in the current file.
-  int32_t num_frames_decoded_;
+  int32_t num_frames_decoded_ = -1;
 
-  static void ClearToks(std::unordered_map<StateId, Token *> &toks);
+  static void ClearToks(std::unordered_map<StateId, Token *> &toks);  // NOLINT
 
   static void PruneToks(float beam, std::unordered_map<StateId, Token *> *toks);
 };

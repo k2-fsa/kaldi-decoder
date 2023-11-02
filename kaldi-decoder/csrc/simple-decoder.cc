@@ -6,8 +6,10 @@
 
 #include "kaldi-decoder/csrc/simple-decoder.h"
 
+#include <algorithm>
 #include <limits>
 #include <unordered_map>
+#include <vector>
 
 #include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/remove-eps-local.h"
@@ -39,7 +41,7 @@ void SimpleDecoder::InitDecoding() {
 }
 
 void SimpleDecoder::AdvanceDecoding(DecodableInterface *decodable,
-                                    int32_t max_num_frames) {
+                                    int32_t max_num_frames /*= -1*/) {
   KALDI_DECODER_ASSERT(num_frames_decoded_ >= 0 &&
                        "You must call InitDecoding() before AdvanceDecoding()");
   int32_t num_frames_ready = decodable->NumFramesReady();
@@ -49,9 +51,11 @@ void SimpleDecoder::AdvanceDecoding(DecodableInterface *decodable,
   // (which isn't allowed).
   KALDI_DECODER_ASSERT(num_frames_ready >= num_frames_decoded_);
   int32_t target_frames_decoded = num_frames_ready;
-  if (max_num_frames >= 0)
+  if (max_num_frames >= 0) {
     target_frames_decoded =
         std::min(target_frames_decoded, num_frames_decoded_ + max_num_frames);
+  }
+
   while (num_frames_decoded_ < target_frames_decoded) {
     // note: ProcessEmitting() increments num_frames_decoded_
     ClearToks(prev_toks_);
@@ -155,23 +159,32 @@ void SimpleDecoder::ProcessEmitting(DecodableInterface *decodable) {
     for (fst::ArcIterator<fst::Fst<StdArc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
       const StdArc &arc = aiter.Value();
-      if (arc.ilabel != 0) {  // propagate..
-        float acoustic_cost = -decodable->LogLikelihood(frame, arc.ilabel);
-        double total_cost = tok->cost_ + arc.weight.Value() + acoustic_cost;
+      if (arc.ilabel == 0) {
+        continue;
+      }
 
-        if (total_cost >= cutoff) continue;
-        if (total_cost + beam_ < cutoff) cutoff = total_cost + beam_;
-        Token *new_tok = new Token(arc, acoustic_cost, tok);
-        auto find_iter = cur_toks_.find(arc.nextstate);
-        if (find_iter == cur_toks_.end()) {
-          cur_toks_[arc.nextstate] = new_tok;
+      // propagate..
+      float acoustic_cost = -decodable->LogLikelihood(frame, arc.ilabel);
+      double total_cost = tok->cost_ + arc.weight.Value() + acoustic_cost;
+
+      if (total_cost >= cutoff) {
+        continue;
+      }
+
+      if (total_cost + beam_ < cutoff) {
+        cutoff = total_cost + beam_;
+      }
+
+      Token *new_tok = new Token(arc, acoustic_cost, tok);
+      auto find_iter = cur_toks_.find(arc.nextstate);
+      if (find_iter == cur_toks_.end()) {
+        cur_toks_[arc.nextstate] = new_tok;
+      } else {
+        if (*(find_iter->second) < *new_tok) {
+          Token::TokenDelete(find_iter->second);
+          find_iter->second = new_tok;
         } else {
-          if (*(find_iter->second) < *new_tok) {
-            Token::TokenDelete(find_iter->second);
-            find_iter->second = new_tok;
-          } else {
-            Token::TokenDelete(new_tok);
-          }
+          Token::TokenDelete(new_tok);
         }
       }
     }
@@ -199,24 +212,27 @@ void SimpleDecoder::ProcessNonemitting() {
     for (fst::ArcIterator<fst::Fst<StdArc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
       const StdArc &arc = aiter.Value();
-      if (arc.ilabel == 0) {  // propagate nonemitting only...
-        const float acoustic_cost = 0.0;
-        Token *new_tok = new Token(arc, acoustic_cost, tok);
-        if (new_tok->cost_ > cutoff) {
-          Token::TokenDelete(new_tok);
+      if (arc.ilabel != 0) {  // propagate nonemitting only...
+        continue;
+      }
+
+      const float acoustic_cost = 0.0;
+      Token *new_tok = new Token(arc, acoustic_cost, tok);
+      if (new_tok->cost_ > cutoff) {
+        Token::TokenDelete(new_tok);
+      } else {
+        auto find_iter = cur_toks_.find(arc.nextstate);
+        if (find_iter == cur_toks_.end()) {
+          cur_toks_[arc.nextstate] = new_tok;
+          queue.push_back(arc.nextstate);
         } else {
-          auto find_iter = cur_toks_.find(arc.nextstate);
-          if (find_iter == cur_toks_.end()) {
-            cur_toks_[arc.nextstate] = new_tok;
+          if (*(find_iter->second) < *new_tok) {
+            // find_iter has a higher cost
+            Token::TokenDelete(find_iter->second);
+            find_iter->second = new_tok;
             queue.push_back(arc.nextstate);
           } else {
-            if (*(find_iter->second) < *new_tok) {
-              Token::TokenDelete(find_iter->second);
-              find_iter->second = new_tok;
-              queue.push_back(arc.nextstate);
-            } else {
-              Token::TokenDelete(new_tok);
-            }
+            Token::TokenDelete(new_tok);
           }
         }
       }
@@ -226,8 +242,7 @@ void SimpleDecoder::ProcessNonemitting() {
 
 // static
 void SimpleDecoder::ClearToks(std::unordered_map<StateId, Token *> &toks) {
-  for (std::unordered_map<StateId, Token *>::iterator iter = toks.begin();
-       iter != toks.end(); ++iter) {
+  for (auto iter = toks.begin(); iter != toks.end(); ++iter) {
     Token::TokenDelete(iter->second);
   }
   toks.clear();
@@ -241,21 +256,27 @@ void SimpleDecoder::PruneToks(float beam,
     return;
   }
   double best_cost = std::numeric_limits<double>::infinity();
-  for (auto iter = toks->begin(); iter != toks->end(); ++iter)
+  for (auto iter = toks->begin(); iter != toks->end(); ++iter) {
     best_cost = std::min(best_cost, iter->second->cost_);
+  }
+
   std::vector<StateId> retained;
   double cutoff = best_cost + beam;
   for (auto iter = toks->begin(); iter != toks->end(); ++iter) {
-    if (iter->second->cost_ < cutoff)
+    if (iter->second->cost_ < cutoff) {
       retained.push_back(iter->first);
-    else
+    } else {
       Token::TokenDelete(iter->second);
+    }
   }
+
   std::unordered_map<StateId, Token *> tmp;
   for (size_t i = 0; i < retained.size(); i++) {
     tmp[retained[i]] = (*toks)[retained[i]];
   }
-  KALDI_DECODER_LOG << "Pruned to " << (retained.size()) << " toks.\n";
+
+  KALDI_DECODER_LOG << "Pruned from " << toks->size() << "  to "
+                    << (retained.size()) << " toks.\n";
   tmp.swap(*toks);
 }
 
