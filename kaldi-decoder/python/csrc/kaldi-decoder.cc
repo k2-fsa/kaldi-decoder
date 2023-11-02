@@ -7,6 +7,7 @@
 #include "kaldi-decoder/python/csrc/decodable-ctc.h"
 #include "kaldi-decoder/python/csrc/decodable-itf.h"
 #include "kaldi-decoder/python/csrc/faster-decoder.h"
+#include "kaldi-decoder/python/csrc/lattice-simple-decoder.h"
 
 namespace kaldi_decoder {
 
@@ -14,6 +15,7 @@ PYBIND11_MODULE(_kaldi_decoder, m) {
   m.doc() = "pybind11 binding of kaldi-decoder";
   PybindDecodableItf(&m);
   PybindFasterDecoder(&m);
+  PybindLatticeSimpleDecoder(&m);
   PybindDecodableCtc(&m);
 }
 

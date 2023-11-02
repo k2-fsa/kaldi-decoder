@@ -5,8 +5,10 @@ set(srcs
   decodable-ctc.cc
   eigen.cc
   faster-decoder.cc
+  kaldi-math.cc
+  lattice-faster-decoder.cc
+  lattice-simple-decoder.cc
 )
-
 
 add_library(kaldi-decoder-core ${srcs})
 

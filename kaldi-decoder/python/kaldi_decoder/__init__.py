@@ -1,6 +1,8 @@
 from _kaldi_decoder import (
-    FasterDecoderOptions,
-    FasterDecoder,
-    DecodableInterface,
     DecodableCtc,
+    DecodableInterface,
+    FasterDecoder,
+    FasterDecoderOptions,
+    LatticeSimpleDecoder,
+    LatticeSimpleDecoderConfig,
 )
