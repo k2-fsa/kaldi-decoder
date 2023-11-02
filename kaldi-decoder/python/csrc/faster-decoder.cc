@@ -53,7 +53,7 @@ void PybindFasterDecoder(py::module *m) {
           },
           py::arg("use_final_probs") = true)
       .def("init_decoding", &PyClass::InitDecoding)
-      .def("advanced_decoding", &PyClass::AdvanceDecoding, py::arg("decodable"),
+      .def("advance_decoding", &PyClass::AdvanceDecoding, py::arg("decodable"),
            py::arg("max_num_frames") = -1)
       .def("num_frames_decoded", &PyClass::NumFramesDecoded);
 }

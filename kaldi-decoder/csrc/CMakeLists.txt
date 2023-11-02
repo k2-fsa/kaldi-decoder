@@ -8,6 +8,7 @@ set(srcs
   kaldi-math.cc
   lattice-faster-decoder.cc
   lattice-simple-decoder.cc
+  simple-decoder.cc
 )
 
 add_library(kaldi-decoder-core ${srcs})

@@ -5,4 +5,5 @@ from _kaldi_decoder import (
     FasterDecoderOptions,
     LatticeSimpleDecoder,
     LatticeSimpleDecoderConfig,
+    SimpleDecoder,
 )
