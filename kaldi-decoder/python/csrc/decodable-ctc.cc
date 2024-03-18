@@ -11,7 +11,8 @@ namespace kaldi_decoder {
 void PybindDecodableCtc(py::module *m) {
   using PyClass = DecodableCtc;
   py::class_<PyClass, DecodableInterface>(*m, "DecodableCtc")
-      .def(py::init<const FloatMatrix &>(), py::arg("feats"));
+      .def(py::init<const FloatMatrix &, int32_t>(), py::arg("feats"),
+           py::arg("offset") = 0);
 }
 
 }  // namespace kaldi_decoder
