@@ -49,13 +49,15 @@ void LatticeSimpleDecoder::ClearActiveTokens() {  // a cleanup routine, at utt
   active_toks_.clear();
   KALDI_DECODER_ASSERT(num_toks_ == 0);
 }
-#if 1
+
 bool LatticeSimpleDecoder::Decode(DecodableInterface *decodable) {
   InitDecoding();
 
   while (!decodable->IsLastFrame(NumFramesDecoded() - 1)) {
-    if (NumFramesDecoded() % config_.prune_interval == 0)
+    if (NumFramesDecoded() % config_.prune_interval == 0) {
       PruneActiveTokens(config_.lattice_beam * config_.prune_scale);
+    }
+
     ProcessEmitting(decodable);
     // Important to call PruneCurrentTokens before ProcessNonemitting, or we
     // would get dangling forward pointers.  Anyway, ProcessNonemitting uses the
@@ -69,7 +71,6 @@ bool LatticeSimpleDecoder::Decode(DecodableInterface *decodable) {
   // to the end state; query ReachedFinal() for that).
   return !final_costs_.empty();
 }
-#endif
 
 // FindOrAddToken either locates a token in cur_toks_, or if necessary inserts a
 // new, empty token (i.e. with no forward links) for the current frame.  [note:
@@ -135,7 +136,9 @@ void LatticeSimpleDecoder::ProcessNonemitting() {
   for (auto iter = cur_toks_.begin(); iter != cur_toks_.end(); ++iter) {
     StateId state = iter->first;
 
-    queue.push_back(state);
+    if (fst_.NumInputEpsilons(state) != 0) {
+      queue.push_back(state);
+    }
 
     best_cost = std::min(best_cost, iter->second->tot_cost);
   }
@@ -164,8 +167,9 @@ void LatticeSimpleDecoder::ProcessNonemitting() {
          aiter.Next()) {
       const Arc &arc = aiter.Value();
       if (arc.ilabel == 0) {  // propagate nonemitting only...
-        float graph_cost = arc.weight.Value(), cur_cost = tok->tot_cost,
-              tot_cost = cur_cost + graph_cost;
+        float graph_cost = arc.weight.Value();
+        float cur_cost = tok->tot_cost;
+        float tot_cost = cur_cost + graph_cost;
 
         if (tot_cost < cutoff) {
           bool changed;
@@ -613,8 +617,9 @@ bool LatticeSimpleDecoder::GetRawLattice(fst::Lattice *ofst,
                          << ": not producing lattice.\n";
       return false;
     }
-    for (Token *tok = active_toks_[f].toks; tok != nullptr; tok = tok->next)
+    for (Token *tok = active_toks_[f].toks; tok != nullptr; tok = tok->next) {
       tok_map[tok] = ofst->AddState();
+    }
     // The next statement sets the start state of the output FST.
     // Because we always add new states to the head of the list
     // active_toks_[f].toks, and the start state was the first one

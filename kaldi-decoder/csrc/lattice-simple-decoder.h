@@ -302,7 +302,7 @@ class LatticeSimpleDecoder {
 
   std::unordered_map<StateId, Token *> cur_toks_;
   std::unordered_map<StateId, Token *> prev_toks_;
-  std::vector<TokenList> active_toks_;  // Lists of tokens, indexed by
+  std::vector<TokenList> active_toks_;  // Lists of tokens, indexed by frame
 
   /// decoding_finalized_ is true if someone called FinalizeDecoding().  [note,
   /// calling this is optional].  If true, it's forbidden to decode more.  Also,
