@@ -5,6 +5,8 @@ set(srcs
   decodable-itf.cc
   faster-decoder.cc
   kaldi-decoder.cc
+  lattice-simple-decoder.cc
+  simple-decoder.cc
 )
 
 pybind11_add_module(_kaldi_decoder ${srcs})
