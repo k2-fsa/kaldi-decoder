@@ -50,18 +50,12 @@ function(download_kaldifst)
       ${kaldifst_SOURCE_DIR}
   )
 
-  target_include_directories(fst
-    PUBLIC
-      ${openfst_SOURCE_DIR}/src/include
-  )
-
   set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "kaldi-decoder-kaldi-fst-core")
-  set_target_properties(fst PROPERTIES OUTPUT_NAME "kaldi-decoder-fst")
 
   if(KALDI_DECODER_BUILD_PYTHON AND WIN32)
-    install(TARGETS kaldifst_core fst DESTINATION ..)
+    install(TARGETS kaldifst_core DESTINATION ..)
   else()
-    install(TARGETS kaldifst_core fst DESTINATION lib)
+    install(TARGETS kaldifst_core DESTINATION lib)
   endif()
 
 endfunction()
