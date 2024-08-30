@@ -99,11 +99,7 @@ function(download_openfst)
   )
 
   if(NOT BUILD_SHARED_LIBS)
-    if(KALDI_DECODER_BUILD_PYTHON AND WIN32)
-      install(TARGETS fst DESTINATION ..)
-    else()
-      install(TARGETS fst DESTINATION lib)
-    endif()
+    install(TARGETS fst DESTINATION lib)
   endif()
 endfunction()
 

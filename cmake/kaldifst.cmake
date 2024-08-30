@@ -68,11 +68,7 @@ function(download_kaldifst)
   set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "kaldi-decoder-kaldi-fst-core")
 
   if(NOT BUILD_SHARED_LIBS)
-    if(KALDI_DECODER_BUILD_PYTHON AND WIN32)
-      install(TARGETS kaldifst_core DESTINATION ..)
-    else()
-      install(TARGETS kaldifst_core DESTINATION lib)
-    endif()
+    install(TARGETS kaldifst_core DESTINATION lib)
   endif()
 
 endfunction()
