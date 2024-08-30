@@ -10,7 +10,8 @@ set(srcs
   simple-decoder.cc
 )
 
-add_library(kaldi-decoder-core ${srcs})
+# Always static build
+add_library(kaldi-decoder-core STATIC ${srcs})
 
 target_link_libraries(kaldi-decoder-core PUBLIC kaldifst_core)
 target_link_libraries(kaldi-decoder-core PUBLIC Eigen3::Eigen)
