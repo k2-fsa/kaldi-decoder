@@ -65,6 +65,7 @@ jobs:
           python3 -m pip install -U pip wheel numpy setuptools
           python3 setup.py bdist_wheel
           ls -lh dist
+          unzip -l ./dist/*.whl
           python3 -m pip install ./dist/kaldi*.whl
           cd ../..
           python3 -c "import kaldi_decoder; print(kaldi_decoder.__version__)"
