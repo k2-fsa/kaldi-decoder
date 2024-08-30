@@ -48,6 +48,10 @@ if(BUILD_SHARED_LIBS AND MSVC)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
+if(BUILD_SHARED_LIBS)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 if(NOT BUILD_SHARED_LIBS AND MSVC)
   # see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
   # https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
