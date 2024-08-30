@@ -19,6 +19,7 @@ function(download_kaldifst)
     if(EXISTS ${f})
       set(kaldifst_URL  "${f}")
       file(TO_CMAKE_PATH "${kaldifst_URL}" kaldifst_URL)
+      message(STATUS "Found local downloaded kaldifst: ${kaldifst_URL}")
       set(kaldifst_URL2)
       break()
     endif()
@@ -34,7 +35,7 @@ function(download_kaldifst)
 
   FetchContent_GetProperties(kaldifst)
   if(NOT kaldifst_POPULATED)
-    message(STATUS "Downloading kaldifst ${kaldifst_URL}")
+    message(STATUS "Downloading kaldifst from ${kaldifst_URL}")
     FetchContent_Populate(kaldifst)
   endif()
   message(STATUS "kaldifst is downloaded to ${kaldifst_SOURCE_DIR}")
@@ -42,19 +43,31 @@ function(download_kaldifst)
 
   list(APPEND CMAKE_MODULE_PATH ${kaldifst_SOURCE_DIR}/cmake)
 
-  include_directories(${kaldifst_SOURCE_DIR})
-  add_subdirectory(${kaldifst_SOURCE_DIR} ${kaldifst_BINARY_DIR})
+  if(BUILD_SHARED_LIBS)
+    set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+
+  add_subdirectory(${kaldifst_SOURCE_DIR} ${kaldifst_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  if(_build_shared_libs_bak)
+    set_target_properties(kaldifst_core
+      PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+    )
+    set(BUILD_SHARED_LIBS ON)
+  endif()
 
   target_include_directories(kaldifst_core
     PUBLIC
-      ${kaldifst_SOURCE_DIR}
+      ${kaldifst_SOURCE_DIR}/
   )
 
   set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "kaldi-decoder-kaldi-fst-core")
 
-  if(KALDI_DECODER_BUILD_PYTHON AND WIN32)
-    install(TARGETS kaldifst_core DESTINATION ..)
-  else()
+  if(NOT BUILD_SHARED_LIBS)
     install(TARGETS kaldifst_core DESTINATION lib)
   endif()
 
