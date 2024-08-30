@@ -56,7 +56,8 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine setuptools
+          opts='--break-system-packages'
+          python3 -m pip install $opts --upgrade pip
+          python3 -m pip install $opts wheel twine setuptools
 
           twine upload ./wheelhouse/*.whl
