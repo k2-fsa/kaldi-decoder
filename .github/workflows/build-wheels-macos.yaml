@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
 
     steps:
       - uses: actions/checkout@v4
@@ -32,10 +32,13 @@ jobs:
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_ENVIRONMENT: KALDI_DECODER_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64;x86_64'"
+          CIBW_ENVIRONMENT: >
+            KALDI_DECODER_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15"
+            MACOSX_DEPLOYMENT_TARGET=10.15
+
           CIBW_ARCHS: "universal2"
           CIBW_BUILD_VERBOSITY: 3
 
@@ -59,6 +62,6 @@ jobs:
         run: |
           opts='--break-system-packages'
           python3 -m pip install $opts --upgrade pip
-          python3 -m pip install $opts wheel twine setuptools
+          python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl
