@@ -37,7 +37,7 @@ with open("kaldi-decoder/python/kaldi_decoder/__init__.py", "a") as f:
 
 setuptools.setup(
     name=package_name,
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     version=get_package_version(),
     author="The next-gen Kaldi development team",
     author_email="csukuangfj@gmail.com",
@@ -56,7 +56,7 @@ setuptools.setup(
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    license="Apache licensed, as found in the LICENSE file",
+    license="Apache-2.0",
 )
 
 with open("kaldi-decoder/python/kaldi_decoder/__init__.py", "r") as f:
