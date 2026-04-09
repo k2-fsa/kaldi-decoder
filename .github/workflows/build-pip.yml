@@ -34,7 +34,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm, macos-13]
+        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm, macos-15-intel]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
       fail-fast: false
     steps:
@@ -61,7 +61,13 @@ jobs:
           python3 setup.py bdist_wheel
           ls -lh dist
           unzip -l ./dist/*.whl
+
           python3 -m pip install ./dist/kaldi*.whl
+
+      - name: Test Python
+        shell: bash
+        run: |
           cd ../..
+
           python3 -c "import kaldi_decoder; print(kaldi_decoder.__version__)"
           python3 -c "import kaldi_decoder; print(kaldi_decoder.__file__)"
