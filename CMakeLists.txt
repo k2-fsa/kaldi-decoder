@@ -45,6 +45,10 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 option(KALDI_DECODER_ENABLE_TESTS "Whether to build tests" ON)
 option(KALDI_DECODER_BUILD_PYTHON "Whether to build Python" ON)
 
+if(WIN32)
+  add_definitions(-DNOMINMAX) # Otherwise, std::max() and std::min() won't work
+endif()
+
 if(KALDI_DECODER_BUILD_PYTHON)
   include(pybind11)
 endif()
