@@ -13,6 +13,15 @@ set(srcs
 # Always static build
 add_library(kaldi-decoder-core STATIC ${srcs})
 
+if(NOT WIN32)
+  set_target_properties(kaldi-decoder-core
+    PROPERTIES
+      POSITION_INDEPENDENT_CODE ON
+      C_VISIBILITY_PRESET hidden
+      CXX_VISIBILITY_PRESET hidden
+  )
+endif()
+
 target_link_libraries(kaldi-decoder-core PUBLIC kaldifst_core)
 target_link_libraries(kaldi-decoder-core PUBLIC Eigen3::Eigen)
 
@@ -41,8 +50,4 @@ if(KALDI_DECODER_ENABLE_TESTS)
   foreach(source IN LISTS test_srcs)
     kaldi_decoder_add_test(${source})
   endforeach()
-endif()
-
-if(NOT BUILD_SHARED_LIBS)
-  install(TARGETS kaldi-decoder-core DESTINATION lib)
 endif()

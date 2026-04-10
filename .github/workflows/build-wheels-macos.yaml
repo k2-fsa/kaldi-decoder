@@ -49,6 +49,7 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
+          unzip -l ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v4
         with:
@@ -60,8 +61,7 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          opts='--break-system-packages'
-          python3 -m pip install $opts --upgrade pip
-          python3 -m pip install $opts wheel twine==5.0.0 setuptools
+          # python3 -m pip install --break-system-packages --upgrade pip
+          python3 -m pip install --break-system-packages wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl

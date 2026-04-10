@@ -1,4 +1,4 @@
-from _kaldi_decoder import (
+from kaldi_decoder.lib._kaldi_decoder import (
     DecodableCtc,
     DecodableInterface,
     FasterDecoder,
