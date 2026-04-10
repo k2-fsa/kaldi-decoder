@@ -30,7 +30,7 @@ def get_package_version():
     return latest_version
 
 
-package_name = "kaldi-decoder"
+package_name = "kaldi_decoder"
 
 with open("kaldi-decoder/python/kaldi_decoder/__init__.py", "a") as f:
     f.write(f"__version__ = '{get_package_version()}'\n")

@@ -44,7 +44,7 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          twine upload --verbose dist/kaldi-decoder-*.tar.gz
+          twine upload --verbose dist/kaldi_decoder-*.tar.gz
 
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
