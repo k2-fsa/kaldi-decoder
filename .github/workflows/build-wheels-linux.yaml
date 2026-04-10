@@ -26,6 +26,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine==5.0.0 setuptools
+
+      - name: Build sdist
+        if: matrix.python-version == 'cp38'
+        shell: bash
+        run: |
+          python3 setup.py sdist
+          ls -lh dist/*
+
+      - name: Publish sdist to PyPI
+        if: matrix.python-version == 'cp38'
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          twine upload --verbose dist/kaldi-decoder-*.tar.gz
+
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
@@ -56,18 +76,3 @@ jobs:
           python3 -m pip install wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl
-
-      - name: Build sdist
-        if: matrix.python-version == 'cp38'
-        shell: bash
-        run: |
-          python3 setup.py sdist
-          ls -lh dist/*
-
-      - name: Publish sdist to PyPI
-        if: matrix.python-version == 'cp38'
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          twine upload dist/kaldi-decoder-*.tar.gz
