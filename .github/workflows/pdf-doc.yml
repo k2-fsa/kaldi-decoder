@@ -24,7 +24,6 @@ on:
     branches:
       - master
       - doc
-      - wheel-android
 
   workflow_dispatch:
 
