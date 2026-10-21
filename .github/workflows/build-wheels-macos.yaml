@@ -9,39 +9,149 @@ on:
 
   workflow_dispatch:
 
-env:
-  KALDI_DECODER_IS_FOR_PYPI: 1
-
 concurrency:
   group: build-wheels-macos-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build_wheels:
-    name: ${{ matrix.python-version }}
+    name: ${{ matrix.python-version }} ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314", "cp315"]
+        arch: ["arm64", "x86_64", "universal2"]
+
+        # python-version is the cibuildwheel selector; python-short is the
+        # same version in actions/setup-python form. The smoke test below
+        # installs the built wheel on the runner, so its interpreter has to
+        # match the wheel tag.
+        include:
+          - python-version: "cp38"
+            python-short: "3.8"
+          - python-version: "cp39"
+            python-short: "3.9"
+          - python-version: "cp310"
+            python-short: "3.10"
+          - python-version: "cp311"
+            python-short: "3.11"
+          - python-version: "cp312"
+            python-short: "3.12"
+          - python-version: "cp313"
+            python-short: "3.13"
+          - python-version: "cp314"
+            python-short: "3.14"
+          - python-version: "cp315"
+            python-short: "3.15"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      - name: Display
+        if: matrix.arch == 'universal2'
+        shell: bash
+        run: |
+          echo "${{ matrix.arch }} is universal2"
+
+      - name: Display
+        if: matrix.arch == 'x86_64'
+        shell: bash
+        run: |
+          echo "${{ matrix.arch }} is x86_64"
+
+      - name: Display
+        if: matrix.arch == 'arm64'
+        shell: bash
+        run: |
+          echo "${{ matrix.arch }} is arm64"
 
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
+      #
+      # CPython 3.8 is EOL and cibuildwheel 4.0 dropped support for building it
+      # (cp315 needs 4.x), so each arch has a cp38 step on 3.x and a step for
+      # the rest on 4.x. macOS needs no manylinux image pin: the interpreter
+      # comes from python.org.
+
+      - name: Build wheels (cp38, universal2)
+        if: matrix.arch == 'universal2' && matrix.python-version == 'cp38'
+        uses: pypa/cibuildwheel@v3.4.1
         env:
-          CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_ENVIRONMENT: >
             KALDI_DECODER_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15"
             MACOSX_DEPLOYMENT_TARGET=10.15
 
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_ARCHS: "universal2"
           CIBW_BUILD_VERBOSITY: 3
 
+          #  Don't repair macOS wheels
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
+
+      - name: Build wheels (universal2)
+        if: matrix.arch == 'universal2' && matrix.python-version != 'cp38'
+        uses: pypa/cibuildwheel@v4.3.3
+        env:
+          CIBW_ENVIRONMENT: >
+            KALDI_DECODER_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15"
+            MACOSX_DEPLOYMENT_TARGET=10.15
+
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_ARCHS: "universal2"
+          CIBW_BUILD_VERBOSITY: 3
+
+          #  Don't repair macOS wheels
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
+
+      - name: Build wheels (cp38, x86_64)
+        if: matrix.arch == 'x86_64' && matrix.python-version == 'cp38'
+        uses: pypa/cibuildwheel@v3.4.1
+        env:
+          CIBW_ENVIRONMENT: >
+            KALDI_DECODER_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15"
+            MACOSX_DEPLOYMENT_TARGET=10.15
+
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_ARCHS: "x86_64"
+          CIBW_BUILD_VERBOSITY: 3
+
+      - name: Build wheels (x86_64)
+        if: matrix.arch == 'x86_64' && matrix.python-version != 'cp38'
+        uses: pypa/cibuildwheel@v4.3.3
+        env:
+          CIBW_ENVIRONMENT: >
+            KALDI_DECODER_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15"
+            MACOSX_DEPLOYMENT_TARGET=10.15
+
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_ARCHS: "x86_64"
+          CIBW_BUILD_VERBOSITY: 3
+
+      - name: Build wheels (cp38, arm64)
+        if: matrix.arch == 'arm64' && matrix.python-version == 'cp38'
+        uses: pypa/cibuildwheel@v3.4.1
+        env:
+          CIBW_ENVIRONMENT: >
+            KALDI_DECODER_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=arm64"
+
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_ARCHS: "arm64"
+          CIBW_BUILD_VERBOSITY: 3
+          #  Don't repair macOS wheels
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
+
+      - name: Build wheels (arm64)
+        if: matrix.arch == 'arm64' && matrix.python-version != 'cp38'
+        uses: pypa/cibuildwheel@v4.3.3
+        env:
+          CIBW_ENVIRONMENT: >
+            KALDI_DECODER_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=arm64"
+
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_ARCHS: "arm64"
+          CIBW_BUILD_VERBOSITY: 3
           #  Don't repair macOS wheels
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
 
@@ -49,19 +159,56 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
-          unzip -l ./wheelhouse/*.whl
+          unzip -l wheelhouse/*.whl
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.python-version }}
+          name: wheel-${{ matrix.python-version }}-${{ matrix.arch }}
           path: ./wheelhouse/*.whl
+
+      # Install the wheel we just built and exercise it before anything is
+      # uploaded. This runs on the runner -- not in a container -- so a wheel
+      # that cannot load must not reach PyPI.
+      - name: Setup Python ${{ matrix.python-short }} for the smoke test
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-short }}
+          # must match the wheel's platform tag, not just its CPython
+          # version: a win32 wheel will not install into a 64-bit Python,
+          # and an x86_64 wheel will not install on an arm64 macOS runner.
+          architecture: ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}
+
+      - name: Install the wheel
+        shell: bash
+        run: |
+          python3 -m pip install --force-reinstall ./wheelhouse/*.whl
+
+          # scripts/smoke_test.py builds the decoding graph with kaldifst,
+          # which is not a dependency of kaldi-decoder itself.
+          python3 -m pip install --force-reinstall -U kaldifst
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          # Run from outside the source tree so `import kaldi_decoder`
+          # resolves to the wheel we just installed, not to this checkout.
+          cd "$RUNNER_TEMP"
+
+          python3 -c "import kaldi_decoder; print(kaldi_decoder.__file__)"
+          python3 -c "import kaldi_decoder; print(kaldi_decoder.__version__)"
+          python3 "$GITHUB_WORKSPACE/scripts/smoke_test.py"
 
       - name: Publish wheels to PyPI
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
         run: |
-          # python3 -m pip install --break-system-packages --upgrade pip
-          python3 -m pip install --break-system-packages wheel twine==5.0.0 setuptools
+          # python3 on macOS runners is managed by Homebrew and cannot be
+          # upgraded in place ("no RECORD file was found for pip"), so install
+          # twine into a throwaway venv instead of the system environment.
+          python3 -m venv "$RUNNER_TEMP/twine"
 
-          twine upload ./wheelhouse/*.whl
+          "$RUNNER_TEMP/twine/bin/python" -m pip install -U pip wheel twine==7.0.0 setuptools
+
+          "$RUNNER_TEMP/twine/bin/twine" upload --skip-existing ./wheelhouse/*.whl

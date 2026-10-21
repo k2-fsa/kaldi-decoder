@@ -1,0 +1,183 @@
+name: test-uv-install
+
+on:
+  push:
+    branches:
+      - master
+      - wheels
+  workflow_dispatch:
+
+concurrency:
+  group: test-uv-install-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test_uv_install:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # See https://github.com/actions/runner-images
+        include:
+          # Linux x64
+          - os: ubuntu-latest
+            python-version: "3.8"
+          - os: ubuntu-latest
+            python-version: "3.9"
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
+          - os: ubuntu-latest
+            python-version: "3.15"
+
+          # Linux arm64
+          - os: ubuntu-24.04-arm
+            python-version: "3.10"
+          - os: ubuntu-24.04-arm
+            python-version: "3.11"
+          - os: ubuntu-24.04-arm
+            python-version: "3.12"
+          - os: ubuntu-24.04-arm
+            python-version: "3.13"
+          - os: ubuntu-24.04-arm
+            python-version: "3.14"
+          - os: ubuntu-24.04-arm
+            python-version: "3.15"
+
+          # macOS x64
+          #
+          # CPython 3.8 and 3.9 have no macOS arm64 builds, so they run on the
+          # Intel runner rather than under Rosetta on an arm64 one.
+          - os: macos-15-intel
+            python-version: "3.8"
+          - os: macos-15-intel
+            python-version: "3.9"
+
+          # macOS arm64
+          - os: macos-14
+            python-version: "3.10"
+          - os: macos-14
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.14"
+          - os: macos-latest
+            python-version: "3.15"
+
+          # Windows x64
+          - os: windows-2022
+            python-version: "3.8"
+          - os: windows-2022
+            python-version: "3.9"
+          - os: windows-2022
+            python-version: "3.10"
+          - os: windows-2022
+            python-version: "3.11"
+          - os: windows-2022
+            python-version: "3.12"
+          - os: windows-2022
+            python-version: "3.13"
+          - os: windows-2022
+            python-version: "3.14"
+          - os: windows-2022
+            python-version: "3.15"
+
+          # Windows arm64
+          - os: windows-11-arm
+            python-version: "3.11"
+          - os: windows-11-arm
+            python-version: "3.12"
+          - os: windows-11-arm
+            python-version: "3.13"
+          - os: windows-11-arm
+            python-version: "3.14"
+          - os: windows-11-arm
+            python-version: "3.15"
+
+          # Windows x86
+          - os: windows-2022
+            python-version: "3.8"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.9"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.10"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.11"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.12"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.13"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.14"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.15"
+            architecture: x86
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Note: astral-sh/setup-uv has no `architecture` input, only `python-arch`
+      # (uv's own names: x86 / x86_64 / aarch64). Passing it is what makes the
+      # Windows x86 rows actually install a 32-bit Python instead of silently
+      # testing the host's x64 one.
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10
+        with:
+          python-version: ${{ matrix.python-version }}
+          python-arch: ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'aarch64' || 'x86_64') }}
+
+      # Create the venv before any `uv run`: `uv run` creates .venv as a side
+      # effect, and a later plain `uv venv` then fails with "A virtual
+      # environment already exists at: .venv". --clear keeps this step
+      # idempotent if that ordering ever slips again.
+      - name: Create virtual environment
+        shell: bash
+        run: |
+          uv venv --clear
+
+      - name: Display Python version
+        shell: bash
+        run: uv run python -c "import sys; print(sys.version)"
+
+      # scripts/smoke_test.py builds the decoding graph with kaldifst, which is
+      # not a dependency of kaldi-decoder itself.
+      - name: Install kaldi-decoder
+        shell: bash
+        run: |
+          uv pip install --verbose -U kaldi-decoder kaldifst
+
+      - name: Run test
+        shell: bash
+        run: |
+          # Run from a directory that has no kaldi_decoder/ package next to it,
+          # so `import kaldi_decoder` resolves to the wheel we just installed
+          # instead of the source tree in this checkout. uv walks up to the repo
+          # root and uses the .venv created above.
+          cd scripts
+
+          uv run python -c "import kaldi_decoder; print(kaldi_decoder.__file__)"
+          uv run python -c "import kaldi_decoder; print(kaldi_decoder.__version__)"
+
+          uv run python ./smoke_test.py

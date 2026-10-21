@@ -24,21 +24,62 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04-arm]
-        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314", "cp315"]
+
+        # python-version is the cibuildwheel selector; python-short is the
+        # same version in actions/setup-python form. The smoke test below
+        # installs the built wheel on the runner, so its interpreter has to
+        # match the wheel tag.
+        include:
+          - python-version: "cp38"
+            python-short: "3.8"
+          - python-version: "cp39"
+            python-short: "3.9"
+          - python-version: "cp310"
+            python-short: "3.10"
+          - python-version: "cp311"
+            python-short: "3.11"
+          - python-version: "cp312"
+            python-short: "3.12"
+          - python-version: "cp313"
+            python-short: "3.13"
+          - python-version: "cp314"
+            python-short: "3.14"
+          - python-version: "cp315"
+            python-short: "3.15"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
+      #
+      # CPython 3.8 is EOL and has been dropped upstream: the manylinux images
+      # removed the interpreter on 2026-05-07 (pypa/manylinux#1884) and
+      # cibuildwheel 4.0 dropped support for building it. The last combination
+      # that still works is cibuildwheel 3.x plus a pinned image from before
+      # that drop. cp315 needs cibuildwheel 4.x, so the two are split here.
+      - name: Build wheels (cp38)
+        if: matrix.python-version == 'cp38'
+        uses: pypa/cibuildwheel@v3.4.1
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/lib.linux-aarch64-cpython-37/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-38/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-39/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-310/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-311/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-312/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-313/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-314/kaldi_decoder/lib'
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/lib.linux-aarch64-cpython-37/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-38/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-39/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-310/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-311/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-312/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-313/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-314/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-315/kaldi_decoder/lib'
+          # last manylinux2014 image that still ships a CPython 3.8 interpreter
+          CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/manylinux2014_aarch64:2026.05.07-1
+
+      - name: Build wheels
+        if: matrix.python-version != 'cp38'
+        uses: pypa/cibuildwheel@v4.3.3
+        env:
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ARCHS_LINUX: aarch64
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/lib.linux-aarch64-cpython-37/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-38/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-39/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-310/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-311/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-312/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-313/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-314/kaldi_decoder/lib:/project/build/lib.linux-aarch64-cpython-315/kaldi_decoder/lib'
 
       - name: Display wheels
         shell: bash
@@ -47,10 +88,42 @@ jobs:
 
           unzip -l ./wheelhouse/*.whl
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
+
+      # Install the wheel we just built and exercise it before anything is
+      # uploaded. This runs on the runner -- not in a container -- so a wheel
+      # that cannot load must not reach PyPI.
+      - name: Setup Python ${{ matrix.python-short }} for the smoke test
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-short }}
+          # must match the wheel's platform tag, not just its CPython
+          # version: a win32 wheel will not install into a 64-bit Python,
+          # and an x86_64 wheel will not install on an arm64 macOS runner.
+          architecture: arm64
+
+      - name: Install the wheel
+        shell: bash
+        run: |
+          python3 -m pip install --force-reinstall ./wheelhouse/*.whl
+
+          # scripts/smoke_test.py builds the decoding graph with kaldifst,
+          # which is not a dependency of kaldi-decoder itself.
+          python3 -m pip install --force-reinstall -U kaldifst
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          # Run from outside the source tree so `import kaldi_decoder`
+          # resolves to the wheel we just installed, not to this checkout.
+          cd "$RUNNER_TEMP"
+
+          python3 -c "import kaldi_decoder; print(kaldi_decoder.__file__)"
+          python3 -c "import kaldi_decoder; print(kaldi_decoder.__version__)"
+          python3 "$GITHUB_WORKSPACE/scripts/smoke_test.py"
 
       - name: Publish wheels to PyPI
         env:
@@ -58,6 +131,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine==5.0.0 setuptools
+          python3 -m pip install wheel twine==7.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl
