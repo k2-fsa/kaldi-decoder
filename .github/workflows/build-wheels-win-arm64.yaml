@@ -101,6 +101,14 @@ jobs:
 
           python3 "$GITHUB_WORKSPACE/scripts/smoke_test.py"
 
+      # The smoke test above switched python3 to the matrix version, which
+      # for cp38/cp39 is too old for current twine (7.x needs 3.10+). Give
+      # the upload its own interpreter so the test setup cannot break it.
+      - name: Setup Python for the upload
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+
       - name: Publish wheels to PyPI
         shell: bash
         env:

@@ -122,6 +122,41 @@ jobs:
           name: wheel-android-${{ matrix.abi }}
           path: ./wheelhouse/*.whl
 
+      # An android_* wheel cannot be installed on a Linux runner -- pip rejects
+      # the platform tag -- so the only place it can be imported is inside
+      # Termux. This gates the publish step: a wheel that cannot load on its
+      # target ABI must not reach PyPI.
+      - name: Smoke test
+        shell: bash
+        run: |
+          chmod -R a+w "${{ github.workspace }}" || true
+
+          docker run --rm \
+            --user 0:0 \
+            --volume ${{ github.workspace }}/wheelhouse:/wheels:ro \
+            --volume ${{ github.workspace }}/scripts/smoke_test.py:/test/smoke_test.py:ro \
+            termux/termux-docker:${{ matrix.docker }} \
+          bash -c '
+            set -e
+            apt update -y
+            apt install -y python python-pip libc++ clang
+            apt install -y android-liblog || true
+            apt install -y libandroid-dev || true
+            apt install -y android-libandroid || true
+
+            pip install --upgrade pip setuptools wheel
+            pip install /wheels/kaldi_decoder-*.whl
+            # scripts/smoke_test.py builds the decoding graph with kaldifst
+            pip install kaldifst
+
+            # termux has no /tmp and / is not writable, so use / as cwd.
+            # sys.path[0] is the directory of the script itself (/test,
+            # holding only smoke_test.py), so the installed wheel is what
+            # gets imported rather than the source tree.
+            cd /
+            python3 /test/smoke_test.py
+          '
+
       - name: Publish wheels to PyPI
         shell: bash
         env:
