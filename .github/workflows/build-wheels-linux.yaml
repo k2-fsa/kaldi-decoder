@@ -65,6 +65,7 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
         run: |
           # twine --skip-existing first queries
           # https://pypi.python.org/pypi/<name>/json -- the deprecated
@@ -157,6 +158,7 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install wheel twine==5.0.0 setuptools
