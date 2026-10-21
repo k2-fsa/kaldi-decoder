@@ -1,0 +1,172 @@
+name: test-pip-install
+
+on:
+  push:
+    branches:
+      - master
+      - wheels
+  workflow_dispatch:
+
+concurrency:
+  group: test_pip_install-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test_pip_install:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # See https://github.com/actions/runner-images
+        include:
+          # Linux x64
+          - os: ubuntu-latest
+            python-version: "3.8"
+          - os: ubuntu-latest
+            python-version: "3.9"
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
+          - os: ubuntu-latest
+            python-version: "3.15"
+
+          # Linux arm64
+          - os: ubuntu-24.04-arm
+            python-version: "3.10"
+          - os: ubuntu-24.04-arm
+            python-version: "3.11"
+          - os: ubuntu-24.04-arm
+            python-version: "3.12"
+          - os: ubuntu-24.04-arm
+            python-version: "3.13"
+          - os: ubuntu-24.04-arm
+            python-version: "3.14"
+          - os: ubuntu-24.04-arm
+            python-version: "3.15"
+
+          # macOS x64
+          #
+          # CPython 3.8 and 3.9 have no macOS arm64 builds, so they run on the
+          # Intel runner rather than under Rosetta on an arm64 one.
+          - os: macos-15-intel
+            python-version: "3.8"
+          - os: macos-15-intel
+            python-version: "3.9"
+
+          # macOS arm64
+          - os: macos-14
+            python-version: "3.10"
+          - os: macos-14
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.14"
+          - os: macos-latest
+            python-version: "3.15"
+
+          # Windows x64
+          - os: windows-2022
+            python-version: "3.8"
+          - os: windows-2022
+            python-version: "3.9"
+          - os: windows-2022
+            python-version: "3.10"
+          - os: windows-2022
+            python-version: "3.11"
+          - os: windows-2022
+            python-version: "3.12"
+          - os: windows-2022
+            python-version: "3.13"
+          - os: windows-2022
+            python-version: "3.14"
+          - os: windows-2022
+            python-version: "3.15"
+
+          # Windows arm64
+          - os: windows-11-arm
+            python-version: "3.11"
+          - os: windows-11-arm
+            python-version: "3.12"
+          - os: windows-11-arm
+            python-version: "3.13"
+          - os: windows-11-arm
+            python-version: "3.14"
+          - os: windows-11-arm
+            python-version: "3.15"
+
+          # Windows x86
+          - os: windows-2022
+            python-version: "3.8"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.9"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.10"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.11"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.12"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.13"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.14"
+            architecture: x86
+          - os: windows-2022
+            python-version: "3.15"
+            architecture: x86
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # No ccache: this installs a prebuilt wheel from PyPI, so nothing is
+      # compiled here.
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture || ((contains(matrix.os, 'arm') || matrix.os == 'macos-14' || matrix.os == 'macos-latest') && 'arm64' || 'x64') }}
+
+      - name: Display Python version
+        shell: bash
+        run: python -c "import sys; print(sys.version)"
+
+      # scripts/smoke_test.py builds the decoding graph with kaldifst, which is
+      # not a dependency of kaldi-decoder itself.
+      - name: Install kaldi-decoder
+        shell: bash
+        run: |
+          pip install --verbose -U kaldi-decoder kaldifst
+
+      - name: Run test
+        shell: bash
+        run: |
+          # Run from a directory that has no kaldi_decoder/ package next to it,
+          # so `import kaldi_decoder` resolves to site-packages (the wheel we
+          # just installed) instead of the source tree in this checkout.
+          cd scripts
+
+          python3 -c "import kaldi_decoder; print(kaldi_decoder.__file__)"
+          python3 -c "import kaldi_decoder; print(kaldi_decoder.__version__)"
+
+          python3 ./smoke_test.py

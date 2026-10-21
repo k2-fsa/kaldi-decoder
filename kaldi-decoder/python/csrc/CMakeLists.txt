@@ -31,3 +31,16 @@ if(NOT WIN32)
 endif()
 
 install(TARGETS _kaldi_decoder DESTINATION lib)
+
+# `kaldi_decoder/__init__.py` does `from kaldi_decoder.lib._kaldi_decoder
+# import ...`, so the extension has to sit next to the Python package it
+# belongs to. `make install` puts it there for a real install; this covers the
+# build tree so `import kaldi_decoder` works without installing.
+add_custom_command(TARGET _kaldi_decoder POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+    "${CMAKE_SOURCE_DIR}/kaldi-decoder/python/kaldi_decoder/lib"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "$<TARGET_FILE:_kaldi_decoder>"
+    "${CMAKE_SOURCE_DIR}/kaldi-decoder/python/kaldi_decoder/lib/"
+  COMMENT "Copying $<TARGET_FILE_NAME:_kaldi_decoder> to kaldi-decoder/python/kaldi_decoder/lib"
+)

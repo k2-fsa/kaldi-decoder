@@ -1,0 +1,182 @@
+name: build-wheels-android
+
+on:
+  push:
+    branches:
+      - wheel
+    tags:
+      - '*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: build-wheels-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_wheels_android:
+    name: ${{ matrix.abi }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # These wheels target Termux-on-Android, not an APK. They are built
+          # natively inside termux/termux-docker images (Termux clang already
+          # targets bionic), so there is no Android NDK and no cross-compiling
+          # toolchain involved. Same approach as sherpa-onnx and
+          # piper-phonemize.
+          #
+          # aarch64 + arm run on an ARM host so no qemu is needed; i686 +
+          # x86_64 run on the x64 host.
+          - abi: aarch64
+            os: ubuntu-24.04-arm
+            docker: aarch64
+            plat: android_24_arm64_v8a
+            makejobs: "-j$(nproc)"
+          - abi: arm
+            os: ubuntu-24.04-arm
+            docker: arm
+            plat: android_24_armeabi_v7a
+            # 32-bit ARM is the constrained leg: -j4 hit
+            # "make[2]: *** duping jobs pipe: Bad file descriptor" part way
+            # through the pybind11 sources. -j1 halves peak memory and keeps
+            # make from creating a jobserver at all.
+            makejobs: "-j1"
+          - abi: i686
+            os: ubuntu-latest
+            docker: i686
+            plat: android_24_x86
+            makejobs: "-j$(nproc)"
+          - abi: x86_64
+            os: ubuntu-latest
+            docker: x86_64
+            plat: android_24_x86_64
+            makejobs: "-j$(nproc)"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # The container runs as root and writes into the mounted workspace.
+      - name: Prepare workspace for root-in-container build
+        shell: bash
+        run: |
+          mkdir -p build dist wheelhouse
+          chmod -R a+w "${{ github.workspace }}"
+
+      - name: Build wheel inside termux
+        shell: bash
+        run: |
+          docker run --rm \
+            --user 0:0 \
+            --volume ${{ github.workspace }}/:/kaldi-decoder \
+            termux/termux-docker:${{ matrix.docker }} \
+          bash -c '
+            set -e
+            apt update -y
+            apt install -y cmake make git python python-pip clang libc++
+            # Package names vary between image snapshots.
+            apt install -y android-liblog || true
+            apt install -y libandroid-dev || true
+            apt install -y android-libandroid || true
+
+            pip install --upgrade pip setuptools wheel
+
+            # termux "python" is unpinned, so the wheel tag is whatever CPython
+            # the image ships today. Log it rather than assume.
+            python3 -VV
+            python3 -c "import sysconfig; print(sysconfig.get_platform())"
+
+            cd /kaldi-decoder
+            # Per-ABI parallelism -- see the matrix comments above. The
+            # shell below expands $(nproc) when the value contains it.
+            export KALDI_DECODER_MAKE_ARGS="${{ matrix.makejobs }}"
+
+            # --plat-name is load-bearing: Termux CPython reports linux-aarch64
+            # (etc.), so without it the wheel is mis-tagged linux_* and pip
+            # refuses it on Android. API level 24 is encoded in the tag; it is
+            # the oldest level with RUNPATH support and covers ~99% of devices.
+            python3 setup.py bdist_wheel --plat-name=${{ matrix.plat }}
+
+            ls -lh dist
+          '
+
+      - name: Collect wheels
+        shell: bash
+        run: |
+          # setup.py also rewrites kaldi-decoder/python/kaldi_decoder/__init__.py,
+          # so that directory is dirty in addition to build/ and dist/.
+          sudo chown -R $USER ./build ./dist ./kaldi-decoder ./wheelhouse
+          cp -v ./dist/*.whl ./wheelhouse
+
+      - name: Display wheels
+        shell: bash
+        run: |
+          ls -lh ./wheelhouse/
+
+          echo "---"
+          unzip -l ./wheelhouse/*.whl
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheel-android-${{ matrix.abi }}
+          path: ./wheelhouse/*.whl
+
+      # An android_* wheel cannot be installed on a Linux runner -- pip rejects
+      # the platform tag -- so the only place it can be imported is inside
+      # Termux. This gates the publish step: a wheel that cannot load on its
+      # target ABI must not reach PyPI.
+      - name: Smoke test
+        shell: bash
+        run: |
+          chmod -R a+w "${{ github.workspace }}" || true
+
+          docker run --rm \
+            --user 0:0 \
+            --volume ${{ github.workspace }}/wheelhouse:/wheels:ro \
+            --volume ${{ github.workspace }}/scripts/smoke_test.py:/test/smoke_test.py:ro \
+            termux/termux-docker:${{ matrix.docker }} \
+          bash -c '
+            set -e
+            apt update -y
+            apt install -y python python-pip libc++ clang
+            apt install -y android-liblog || true
+            apt install -y libandroid-dev || true
+            apt install -y android-libandroid || true
+
+            pip install --upgrade pip setuptools wheel
+            pip install /wheels/kaldi_decoder-*.whl
+            # scripts/smoke_test.py builds the decoding graph with kaldifst
+            pip install kaldifst
+
+            # termux has no /tmp and / is not writable, so use / as cwd.
+            # sys.path[0] is the directory of the script itself (/test,
+            # holding only smoke_test.py), so the installed wheel is what
+            # gets imported rather than the source tree.
+            cd /
+            python3 /test/smoke_test.py
+          '
+
+      - name: Publish wheels to PyPI
+        shell: bash
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine==5.0.0 setuptools
+
+          # twine --skip-existing first queries
+          # https://pypi.python.org/pypi/<name>/json -- the deprecated
+          # hostname, hardcoded as LEGACY_PYPI in twine/repository.py (same
+          # in 5.0.0 and 7.x). Runner DNS for that name is occasionally
+          # flaky and fails the step even though upload.pypi.org is
+          # reachable. Retry so a transient lookup error cannot sink an
+          # otherwise-good publish; --skip-existing makes re-runs
+          # idempotent, so retrying is safe.
+          for _ in 1 2 3 4 5; do
+            twine upload --skip-existing ./wheelhouse/*.whl && exit 0
+            echo 'twine upload failed; retrying in 15s'
+            sleep 15
+          done
+          exit 1

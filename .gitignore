@@ -2,3 +2,6 @@ build
 __pycache__
 dist
 *egg-info
+*.so
+*.dylib
+*.pyd

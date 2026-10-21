@@ -9,7 +9,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-set(KALDI_DECODER_VERSION "0.3.0")
+set(KALDI_DECODER_VERSION "0.3.2")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -60,5 +60,21 @@ if(KALDI_DECODER_ENABLE_TESTS)
   enable_testing()
   include(googletest)
 endif()
+
+# PYTHON_EXECUTABLE is used to query the Python site-packages directory (for
+# the macOS rpath). pybind11 resolves the interpreter into Python_EXECUTABLE,
+# but only within its own add_subdirectory() scope, so it is not visible here;
+# fall back to FindPython3 when the Python bindings are off.
+if(NOT PYTHON_EXECUTABLE)
+  if(Python_EXECUTABLE)
+    set(PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+  elseif(Python3_EXECUTABLE)
+    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+  else()
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+  endif()
+endif()
+message(STATUS "PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}")
 
 add_subdirectory(kaldi-decoder)

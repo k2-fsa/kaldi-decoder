@@ -1,0 +1,99 @@
+# Copyright      2026  Xiaomi Corp.       (author: Fangjun Kuang)
+
+# See ../../LICENSE for clarification regarding multiple authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# refer to https://github.com/k2-fsa/kaldifst/blob/master/.github/workflows/pdf-doc.yml
+
+# The PDF is published at
+# https://github.com/k2-fsa/kaldi-decoder/releases/tag/doc
+name: Generate PDF doc
+on:
+  push:
+    branches:
+      - master
+      - doc
+
+  workflow_dispatch:
+
+concurrency:
+  group: pdf-doc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pdf-doc:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+    steps:
+      # refer to https://github.com/actions/checkout
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # docs/source/python_api/index.rst autodocs kaldi_decoder, so the Sphinx
+      # build has to import the package. We generate the LaTeX sources on the
+      # runner and only run latexmk inside the TeX Live container.
+      - name: Generate LaTeX sources
+        shell: bash
+        run: |
+          python3 -m pip install .
+          python3 -m pip install -r ./docs/requirements.txt
+
+          cd docs
+          make latex
+
+          ls -lh build/latex | head -n 30
+
+      - name: Build PDF with TeX Live
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            --entrypoint /bin/bash \
+            reitzig/texlive-full:latest \
+            -c "
+              uname -a
+              cat /etc/*release
+              which latexmk
+
+              cd docs/build/latex
+              latexmk -pdf -dvi- -ps- -interaction=nonstopmode kaldi-decoder.tex
+
+              find . -name '*.pdf'
+              ls -lh kaldi-decoder.pdf
+              cp -v kaldi-decoder.pdf /workspace/
+            "
+
+      - name: View generated files
+        shell: bash
+        run: |
+          ls -lh kaldi-decoder.pdf
+
+      - name: Release kaldi-decoder.pdf
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./kaldi-decoder.pdf
+          tag: doc
