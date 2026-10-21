@@ -122,13 +122,6 @@ jobs:
           python3 -c "import kaldi_decoder; print(kaldi_decoder.__version__)"
           python3 "$GITHUB_WORKSPACE/scripts/smoke_test.py"
 
-      # The smoke test above switched python3 to the matrix version, which
-      # for cp38/cp39 is too old for current twine (7.x needs 3.10+). Give
-      # the upload its own interpreter so the test setup cannot break it.
-      - name: Setup Python for the upload
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.x"
 
       - name: Publish wheels to PyPI
         env:
@@ -136,6 +129,19 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine==7.0.0 setuptools
+          python3 -m pip install wheel twine==5.0.0 setuptools
 
-          twine upload --skip-existing ./wheelhouse/*.whl
+          # twine --skip-existing first queries
+          # https://pypi.python.org/pypi/<name>/json -- the deprecated
+          # hostname, hardcoded as LEGACY_PYPI in twine/repository.py (same
+          # in 5.0.0 and 7.x). Runner DNS for that name is occasionally
+          # flaky and fails the step even though upload.pypi.org is
+          # reachable. Retry so a transient lookup error cannot sink an
+          # otherwise-good publish; --skip-existing makes re-runs
+          # idempotent, so retrying is safe.
+          for _ in 1 2 3 4 5; do
+            twine upload --skip-existing ./wheelhouse/*.whl && exit 0
+            echo 'twine upload failed; retrying in 15s'
+            sleep 15
+          done
+          exit 1
