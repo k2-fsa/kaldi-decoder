@@ -22,6 +22,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-11-arm]
+        # A real python-version list is required: include: entries only
+        # *merge into* existing combinations. Without this list the whole
+        # matrix is a single combination and every include: overwrites the
+        # previous one, so only the last entry (cp315) would run.
+        python-version: ["cp311", "cp312", "cp313", "cp314", "cp315"]
         # CPython has native Windows ARM64 builds for 3.11 and later.
         # cp38/cp39/cp310 are skipped because actions/setup-python cannot find
         # an arm64 interpreter for them ("The version '3.10' with architecture
