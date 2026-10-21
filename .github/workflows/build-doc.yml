@@ -23,13 +23,7 @@ on:
     branches:
       - master
       - doc
-    paths:
-      - '.github/workflows/build-doc.yml'
-      - 'docs/**'
-      - 'kaldi-decoder/**'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'setup.py'
+      - wheel-android
 
   workflow_dispatch:
 
