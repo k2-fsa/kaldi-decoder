@@ -15,6 +15,7 @@
 #include "kaldi-decoder/csrc/decodable-itf.h"
 
 namespace kaldi_decoder {
+namespace {
 
 // Deterministic decodable: score table [frame][label], labels 1-based.
 class TableDecodable : public DecodableInterface {
@@ -24,7 +25,8 @@ class TableDecodable : public DecodableInterface {
       : scores_(scores), num_indices_(num_indices) {}
 
   float LogLikelihood(int32_t frame, int32_t index) override {
-    if (frame < 0 || frame >= static_cast<int32_t>(scores_.size())) return -1e10;
+    if (frame < 0 || frame >= static_cast<int32_t>(scores_.size()))
+      return -1e10;
     if (index < 1 || index > num_indices_) return -1e10;
     return scores_[frame][index - 1];
   }
@@ -81,11 +83,12 @@ std::vector<fst::StdArc::Label> BestPathLabels(const fst::Lattice &lat) {
   return labels;
 }
 
+}  // namespace
+
 TEST(FasterDecoder, LinearGraph) {
   auto graph = MakeLinearGraph();
-  TableDecodable dec({{0.0f, -10.0f, -10.0f, -10.0f},
-                      {-10.0f, 0.0f, -10.0f, -10.0f}},
-                     4);
+  TableDecodable dec(
+      {{0.0f, -10.0f, -10.0f, -10.0f}, {-10.0f, 0.0f, -10.0f, -10.0f}}, 4);
   FasterDecoderOptions opts;
   opts.beam = 16.0;
   FasterDecoder decoder(graph, opts);
@@ -105,9 +108,8 @@ TEST(FasterDecoder, TwoBranchesAcoustic) {
   FasterDecoderOptions opts;
   opts.beam = 16.0;
 
-  TableDecodable dec_a({{0.0f, -10.0f, -10.0f, -10.0f},
-                        {-10.0f, 0.0f, -10.0f, -10.0f}},
-                       4);
+  TableDecodable dec_a(
+      {{0.0f, -10.0f, -10.0f, -10.0f}, {-10.0f, 0.0f, -10.0f, -10.0f}}, 4);
   {
     FasterDecoder decoder(graph, opts);
     decoder.InitDecoding();
@@ -118,9 +120,8 @@ TEST(FasterDecoder, TwoBranchesAcoustic) {
     std::vector<fst::StdArc::Label> expected = {1, 2};
     EXPECT_EQ(BestPathLabels(best), expected);
   }
-  TableDecodable dec_b({{-10.0f, -10.0f, 0.0f, -10.0f},
-                        {-10.0f, -10.0f, -10.0f, 0.0f}},
-                       4);
+  TableDecodable dec_b(
+      {{-10.0f, -10.0f, 0.0f, -10.0f}, {-10.0f, -10.0f, -10.0f, 0.0f}}, 4);
   {
     FasterDecoder decoder(graph, opts);
     decoder.InitDecoding();
@@ -164,9 +165,8 @@ TEST(FasterDecoder, IncrementalAdvanceDecoding) {
   // Advancing one frame at a time must give the same answer as decoding in
   // one call.
   auto graph = MakeTwoBranchGraph(0.0f, 0.0f);
-  TableDecodable dec({{0.0f, -10.0f, -10.0f, -10.0f},
-                      {-10.0f, 0.0f, -10.0f, -10.0f}},
-                     4);
+  TableDecodable dec(
+      {{0.0f, -10.0f, -10.0f, -10.0f}, {-10.0f, 0.0f, -10.0f, -10.0f}}, 4);
   FasterDecoderOptions opts;
   opts.beam = 16.0;
   FasterDecoder decoder(graph, opts);

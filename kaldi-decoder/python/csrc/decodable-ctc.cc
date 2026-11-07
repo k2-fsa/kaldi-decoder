@@ -26,7 +26,8 @@ decodable; the matrix is copied.  Indices are **one-based**:
           R"doc(Construct from a log-probability matrix (copied).
 
 :param log_probs: ``(num_frames, num_classes)`` float32 array.
-:param offset: Frame index of row 0 (default 0).)doc")
+:param offset: Frame index of row 0 (default 0).)doc",
+          py::call_guard<py::gil_scoped_release>())
       .def("num_frames_ready", &PyClass::NumFramesReady,
            R"doc(Number of frames: ``log_probs.shape[0] + offset``.)doc")
       .def("is_last_frame", &PyClass::IsLastFrame, py::arg("frame"),

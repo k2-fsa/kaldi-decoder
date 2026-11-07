@@ -9,14 +9,14 @@
 
 #include "kaldi-decoder/csrc/hash-list.h"
 
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <map>  // for baseline.
 
 // #include "kaldi-decoder/csrc/kaldi-math.h"
 #include "gtest/gtest.h"
 
 namespace kaldi_decoder {
+namespace {
 
 template <class Int, class T>
 void TestHashList() {
@@ -47,7 +47,8 @@ void TestHashList() {
     }
     std::swap(m1, m2);
 
-    Elem *h = hash.Clear(), *tmp;
+    Elem *h = hash.Clear();
+    Elem *tmp = nullptr;
 
     // note, SetSize is relatively cheap
     hash.SetSize(100 + rand() % 100);  // NOLINT
@@ -82,12 +83,15 @@ void TestHashList() {
     KALDI_DECODER_ASSERT(m1.size() == count);
   }
 
-  Elem *h = hash.Clear(), *tmp;
+  Elem *h = hash.Clear();
+  Elem *tmp = nullptr;
   for (; h != nullptr; h = tmp) {
     tmp = h->tail;
     hash.Delete(h);  // think of this like calling delete.
   }
 }
+
+}  // namespace
 
 TEST(HashList, Test) {
   for (size_t i = 0; i < 3; i++) {

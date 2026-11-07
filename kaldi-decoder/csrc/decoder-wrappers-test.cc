@@ -28,7 +28,8 @@ class TableDecodable : public DecodableInterface {
       : scores_(scores), num_indices_(num_indices) {}
 
   float LogLikelihood(int32_t frame, int32_t index) override {
-    if (frame < 0 || frame >= static_cast<int32_t>(scores_.size())) return -1e10;
+    if (frame < 0 || frame >= static_cast<int32_t>(scores_.size()))
+      return -1e10;
     if (index < 1 || index > num_indices_) return -1e10;
     return scores_[frame][index - 1];
   }
@@ -109,10 +110,10 @@ TEST(DecoderWrappers, DecodeUtteranceLatticeFasterLinear) {
   std::vector<int32_t> alignments;
   std::vector<int32_t> words;
   double log_like = 0;
-  bool succeeded =
-      DecodeUtteranceLatticeFaster(decoder, dec, tm, "utt",
-                                   /*allow_partial=*/false, /*acoustic_scale=*/1.0f,
-                                   &alignments, &words, &log_like);
+  bool succeeded = DecodeUtteranceLatticeFaster(decoder, dec, tm, "utt",
+                                                /*allow_partial=*/false,
+                                                /*acoustic_scale=*/1.0f,
+                                                &alignments, &words, &log_like);
   EXPECT_TRUE(succeeded);
   std::vector<int32_t> expected_ali = {1, 2};
   std::vector<int32_t> expected_words = {10, 20};
@@ -131,10 +132,10 @@ TEST(DecoderWrappers, DecodeUtteranceLatticeSimpleLinear) {
   std::vector<int32_t> alignments;
   std::vector<int32_t> words;
   double log_like = 0;
-  bool succeeded =
-      DecodeUtteranceLatticeSimple(decoder, dec, tm, "utt",
-                                   /*allow_partial=*/false, /*acoustic_scale=*/1.0f,
-                                   &alignments, &words, &log_like);
+  bool succeeded = DecodeUtteranceLatticeSimple(decoder, dec, tm, "utt",
+                                                /*allow_partial=*/false,
+                                                /*acoustic_scale=*/1.0f,
+                                                &alignments, &words, &log_like);
   EXPECT_TRUE(succeeded);
   std::vector<int32_t> expected_ali = {1, 2};
   std::vector<int32_t> expected_words = {10, 20};

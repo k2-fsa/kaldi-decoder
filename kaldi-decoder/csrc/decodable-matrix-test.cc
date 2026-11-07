@@ -16,6 +16,7 @@
 #include "kaldi-decoder/csrc/transition-information.h"
 
 namespace kaldi_decoder {
+namespace {
 
 // Minimal TransitionInformation for tests: 1-based tid -> pdf map.
 class FakeTransitionInformation : public TransitionInformation {
@@ -23,7 +24,6 @@ class FakeTransitionInformation : public TransitionInformation {
   explicit FakeTransitionInformation(std::vector<int32_t> tid_to_pdf)
       : tid_to_pdf_(std::move(tid_to_pdf)) {
     // index 0 is unused (transition-ids are one-based); pdf ids are 0-based.
-    num_pdfs_ = 0;
     for (int32_t p : tid_to_pdf_) num_pdfs_ = std::max(num_pdfs_, p + 1);
   }
 
@@ -41,13 +41,15 @@ class FakeTransitionInformation : public TransitionInformation {
 
  private:
   std::vector<int32_t> tid_to_pdf_;
-  int32_t num_pdfs_;
+  int32_t num_pdfs_ = 0;
 };
 
 // tid 0 is a placeholder; tids 1..4 map to pdfs 0..3 (tid 2 shares pdf 1).
 FakeTransitionInformation MakeFakeTm() {
   return FakeTransitionInformation({-1, 0, 1, 1, 2, 3});
 }
+
+}  // namespace
 
 TEST(DecodableMatrixScaledMapped, HandGolden) {
   auto tm = MakeFakeTm();
@@ -57,7 +59,8 @@ TEST(DecodableMatrixScaledMapped, HandGolden) {
 
   DecodableMatrixScaledMapped dec(tm, likes, 2.0f);
   EXPECT_EQ(dec.NumFramesReady(), 2);
-  EXPECT_EQ(dec.NumIndices(), 5);  // tids 1..5? -> NumTransitionIds = size-1 = 5
+  EXPECT_EQ(dec.NumIndices(),
+            5);  // tids 1..5? -> NumTransitionIds = size-1 = 5
   EXPECT_TRUE(dec.IsLastFrame(1));
   EXPECT_FALSE(dec.IsLastFrame(0));
   // LogLikelihood(frame, tid) = scale * likes(frame, pdf(tid))
@@ -120,9 +123,9 @@ TEST(DecodableMatrixScaled, HandGolden) {
 TEST(DecodableCtc, CopyDisabled) {
   // Regression: p_ aliases the internal matrix; copying would leave a
   // dangling alias (use-after-free).  The type must not be copyable.
-  static_assert(!std::is_copy_constructible<DecodableCtc>::value,
+  static_assert(!std::is_copy_constructible_v<DecodableCtc>,
                 "DecodableCtc must not be copy-constructible");
-  static_assert(!std::is_copy_assignable<DecodableCtc>::value,
+  static_assert(!std::is_copy_assignable_v<DecodableCtc>,
                 "DecodableCtc must not be copy-assignable");
 }
 
@@ -137,10 +140,10 @@ TEST(DecodableCtc, EmptyMatrixAndBounds) {
   FloatMatrix m(2, 3);
   m << 0.0f, -1.0f, -2.0f, -3.0f, -4.0f, -5.0f;
   DecodableCtc ok(m);
-  EXPECT_FLOAT_EQ(ok.LogLikelihood(1, 3), -5.0f);  // 1-based: col 2
-  EXPECT_THROW(ok.LogLikelihood(2, 1), std::runtime_error);   // frame OOB
-  EXPECT_THROW(ok.LogLikelihood(0, 0), std::runtime_error);   // index OOB
-  EXPECT_THROW(ok.LogLikelihood(0, 4), std::runtime_error);   // index OOB
+  EXPECT_FLOAT_EQ(ok.LogLikelihood(1, 3), -5.0f);            // 1-based: col 2
+  EXPECT_THROW(ok.LogLikelihood(2, 1), std::runtime_error);  // frame OOB
+  EXPECT_THROW(ok.LogLikelihood(0, 0), std::runtime_error);  // index OOB
+  EXPECT_THROW(ok.LogLikelihood(0, 4), std::runtime_error);  // index OOB
 }
 
 TEST(DecodableCtc, RawPointerCtorSharesMemory) {

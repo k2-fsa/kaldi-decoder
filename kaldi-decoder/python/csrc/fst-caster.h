@@ -32,11 +32,11 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "fst/fstlib.h"
 
-namespace pybind11 {
-namespace detail {
+namespace pybind11::detail {
 
 inline object kd_kaldifst_module() {
   // Intentionally leaked: a C++ static `object` would be destroyed during C++
@@ -61,6 +61,7 @@ struct type_caster<fst::VectorFst<fst::StdArc>> {
       pybind11::gil_scoped_acquire gil;  // safe if already held
       uint64_t addr =
           kd_kaldifst_module().attr("_vector_fst_addr")(src).cast<uint64_t>();
+      // NOLINTNEXTLINE(performance-no-int-to-ptr) -- pointer bridge by design
       held_ = reinterpret_cast<fst::VectorFst<fst::StdArc> *>(addr);
       return held_ != nullptr;
     } catch (const std::exception &) {
@@ -91,8 +92,8 @@ struct type_caster<fst::VectorFst<fst::StdArc>> {
     return wrap(src, /*owning=*/true);
   }
 
-  operator fst::VectorFst<fst::StdArc> *() { return held_; }
-  operator fst::VectorFst<fst::StdArc> &() { return *held_; }
+  operator fst::VectorFst<fst::StdArc> *() { return held_; }   // NOLINT
+  operator fst::VectorFst<fst::StdArc> &() { return *held_; }  // NOLINT
 
   template <typename T_>
   using cast_op_type = movable_cast_op_type<T_>;
@@ -102,7 +103,8 @@ struct type_caster<fst::VectorFst<fst::StdArc>> {
     // The python API needs the GIL; acquire is reentrant so this is safe
     // regardless of caller context.
     pybind11::gil_scoped_acquire gil;
-    uint64_t addr = reinterpret_cast<uint64_t>(p);
+    uint64_t addr =
+        reinterpret_cast<uint64_t>(p);  // NOLINT -- pointer bridge by design
     // Ownership always transfers to the python side (see the SAFETY
     // CONTRACT on the pointer-returning cast()).
     (void)owning;
@@ -124,6 +126,7 @@ struct type_caster<fst::Fst<fst::StdArc>> {
       pybind11::gil_scoped_acquire gil;  // safe if already held
       uint64_t addr =
           kd_kaldifst_module().attr("_vector_fst_addr")(src).cast<uint64_t>();
+      // NOLINTNEXTLINE(performance-no-int-to-ptr) -- pointer bridge by design
       held_ = reinterpret_cast<fst::VectorFst<fst::StdArc> *>(addr);
       return held_ != nullptr;
     } catch (const std::exception &) {
@@ -141,16 +144,16 @@ struct type_caster<fst::Fst<fst::StdArc>> {
         .release();
   }
 
-  operator fst::Fst<fst::StdArc> *() {
+  operator fst::Fst<fst::StdArc> *() {  // NOLINT
     return static_cast<fst::Fst<fst::StdArc> *>(held_);
   }
-  operator fst::Fst<fst::StdArc> &() {
+  operator fst::Fst<fst::StdArc> &() {  // NOLINT
     return *static_cast<fst::Fst<fst::StdArc> *>(held_);
   }
-  operator const fst::Fst<fst::StdArc> *() const {
+  operator const fst::Fst<fst::StdArc> *() const {  // NOLINT
     return static_cast<const fst::Fst<fst::StdArc> *>(held_);
   }
-  operator const fst::Fst<fst::StdArc> &() const {
+  operator const fst::Fst<fst::StdArc> &() const {  // NOLINT
     return *static_cast<const fst::Fst<fst::StdArc> *>(held_);
   }
 
@@ -161,7 +164,6 @@ struct type_caster<fst::Fst<fst::StdArc>> {
   fst::VectorFst<fst::StdArc> *held_ = nullptr;
 };
 
-}  // namespace detail
-}  // namespace pybind11
+}  // namespace pybind11::detail
 
 #endif  // KALDI_DECODER_PYTHON_CSRC_FST_CASTER_H_

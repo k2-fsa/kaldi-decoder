@@ -6,22 +6,21 @@
 // leave uncovered (per llvm-cov function coverage).  Each test documents
 // which function it covers.
 
-#include "kaldi-decoder/csrc/decodable-itf.h"
-#include "kaldi-decoder/csrc/eigen.h"
-#include "kaldi-decoder/csrc/decoder-wrappers.h"
-#include "kaldi-decoder/csrc/determinize-lattice-pruned.h"
-#include "kaldi-decoder/csrc/faster-decoder.h"
-#include "kaldi-decoder/csrc/lattice-faster-decoder.h"
-#include "kaldi-decoder/csrc/lattice-simple-decoder.h"
-#include "kaldi-decoder/csrc/simple-decoder.h"
-#include "kaldi-decoder/csrc/transition-information.h"
-
 #include <limits>
 #include <stdexcept>
 #include <vector>
 
 #include "fst/fstlib.h"
 #include "gtest/gtest.h"
+#include "kaldi-decoder/csrc/decodable-itf.h"
+#include "kaldi-decoder/csrc/decoder-wrappers.h"
+#include "kaldi-decoder/csrc/determinize-lattice-pruned.h"
+#include "kaldi-decoder/csrc/eigen.h"
+#include "kaldi-decoder/csrc/faster-decoder.h"
+#include "kaldi-decoder/csrc/lattice-faster-decoder.h"
+#include "kaldi-decoder/csrc/lattice-simple-decoder.h"
+#include "kaldi-decoder/csrc/simple-decoder.h"
+#include "kaldi-decoder/csrc/transition-information.h"
 
 namespace kaldi_decoder {
 
@@ -212,9 +211,9 @@ TEST(ApiCoverage, CarefulAndRetryAlignment) {
     int64_t frame_count = 0;
     std::vector<int32_t> alignment;
     std::vector<int32_t> words;
-    AlignUtteranceWrapper(cfg, "utt", 1.0f, &graph, &dec, &num_done,
-                          &num_error, &num_retried, &tot_like, &frame_count,
-                          &alignment, &words);
+    AlignUtteranceWrapper(cfg, "utt", 1.0f, &graph, &dec, &num_done, &num_error,
+                          &num_retried, &tot_like, &frame_count, &alignment,
+                          &words);
     EXPECT_EQ(num_done, 1);
     EXPECT_EQ(num_error, 0);
     std::vector<int32_t> expected_ali = {1, 2};
@@ -239,9 +238,9 @@ TEST(ApiCoverage, CarefulAndRetryAlignment) {
     int64_t frame_count = 0;
     std::vector<int32_t> alignment;
     std::vector<int32_t> words;
-    AlignUtteranceWrapper(cfg, "utt", 1.0f, &graph, &dec, &num_done,
-                          &num_error, &num_retried, &tot_like, &frame_count,
-                          &alignment, &words);
+    AlignUtteranceWrapper(cfg, "utt", 1.0f, &graph, &dec, &num_done, &num_error,
+                          &num_retried, &tot_like, &frame_count, &alignment,
+                          &words);
     EXPECT_EQ(num_done, 0);
     EXPECT_EQ(num_error, 1);
   }
@@ -261,9 +260,8 @@ TEST(ApiCoverage, DecodeWrapperTemplateInstantiations) {
     std::vector<int32_t> ali, words;
     double like = 0;
     fst::Lattice lat;
-    EXPECT_TRUE(DecodeUtteranceLatticeFaster(decoder, dec, tm, "u", false,
-                                             1.0f, &ali, &words, &like,
-                                             &lat));
+    EXPECT_TRUE(DecodeUtteranceLatticeFaster(decoder, dec, tm, "u", false, 1.0f,
+                                             &ali, &words, &like, &lat));
     std::vector<int32_t> expected_ali = {1, 2};
     EXPECT_EQ(ali, expected_ali);
   }
@@ -272,9 +270,8 @@ TEST(ApiCoverage, DecodeWrapperTemplateInstantiations) {
         decoder(cgraph, LatticeFasterDecoderConfig());
     std::vector<int32_t> ali, words;
     double like = 0;
-    EXPECT_TRUE(DecodeUtteranceLatticeFaster(decoder, dec, tm, "u", false,
-                                             1.0f, &ali, &words, &like,
-                                             nullptr));
+    EXPECT_TRUE(DecodeUtteranceLatticeFaster(decoder, dec, tm, "u", false, 1.0f,
+                                             &ali, &words, &like, nullptr));
     std::vector<int32_t> expected_ali = {1, 2};
     EXPECT_EQ(ali, expected_ali);
   }
@@ -301,8 +298,7 @@ TEST(ApiCoverage, ConfigToStringAndCheck) {
             std::string::npos);
   EXPECT_NE(LatticeSimpleDecoderConfig().ToString().find("beam="),
             std::string::npos);
-  EXPECT_NE(FasterDecoderOptions().ToString().find("beam="),
-            std::string::npos);
+  EXPECT_NE(FasterDecoderOptions().ToString().find("beam="), std::string::npos);
   EXPECT_NE(DeterminizeLatticePrunedOptions().ToString().find("delta="),
             std::string::npos);
   EXPECT_NE(DeterminizeLatticePhonePrunedOptions().ToString().find("delta="),

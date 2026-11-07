@@ -32,12 +32,17 @@ jobs:
         # the include below adds one 1.x cell per OS (numpy<2 has no
         # wheels for Python >= 3.13, hence 3.12).
         numpy: ["2"]
+        # Only test numpy versions that actually have wheels for the cell:
+        #  - numpy>=2 has no cp38 wheels (needs Python >= 3.9): test 3.8 with
+        #    numpy 1.x only;
+        #  - numpy<2 has no windows-arm64 wheels at all: test windows-11-arm
+        #    with numpy 2.x only.
         include:
           - os: windows-latest
             python-version: "3.12"
             numpy: "1"
-          - os: windows-11-arm
-            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.8"
             numpy: "1"
         exclude:
           # Windows on ARM only ships CPython 3.11+ (same as
@@ -49,6 +54,10 @@ jobs:
             python-version: "3.9"
           - os: windows-11-arm
             python-version: "3.10"
+          # numpy>=2 has no cp38 wheels; 3.8 runs the numpy 1.x include cell.
+          - os: windows-latest
+            python-version: "3.8"
+            numpy: "2"
 
     steps:
       - uses: actions/checkout@v7

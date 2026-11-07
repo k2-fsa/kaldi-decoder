@@ -28,7 +28,11 @@
    @file lattice-faster-decoder.h
    @brief The standard lattice decoder (kaldi's LatticeFasterDecoder).
 
-   This file is copied/modified from @kfile{src/decoder/lattice-faster-decoder.h}.  The decoder behind gmm-latgen-faster: beam-pruned token passing that keeps near-best alternatives as a lattice.  See kaldi's doc/lattices.dox and doc/decoders.dox.
+   This file is copied/modified from
+   @kfile{src/decoder/lattice-faster-decoder.h}.  The decoder behind
+   gmm-latgen-faster: beam-pruned token passing that keeps near-best
+   alternatives as a lattice.  See kaldi's doc/lattices.dox and
+   doc/decoders.dox.
 
    @see LatticeSimpleDecoder, decoder-wrappers.h, DecodableInterface.
 */
@@ -72,7 +76,7 @@ struct LatticeFasterDecoderConfig {
 
   /// @brief Construct with kaldi's defaults (all arguments optional).
   /// @see Check, ToString
-  LatticeFasterDecoderConfig(
+  explicit LatticeFasterDecoderConfig(
       float beam = 16.0,
       int32_t max_active = std::numeric_limits<int32_t>::max(),
       int32_t min_active = 200, float lattice_beam = 10.0,
@@ -121,9 +125,9 @@ struct LatticeFasterDecoderConfig {
   /// @see LatticeFasterDecoderConfig
   void Check() const {
     KALDI_DECODER_ASSERT(beam > 0.0 && max_active > 1 && lattice_beam > 0.0 &&
-               min_active <= max_active && prune_interval > 0 &&
-               beam_delta > 0.0 && hash_ratio >= 1.0 && prune_scale > 0.0 &&
-               prune_scale < 1.0);
+                         min_active <= max_active && prune_interval > 0 &&
+                         beam_delta > 0.0 && hash_ratio >= 1.0 &&
+                         prune_scale > 0.0 && prune_scale < 1.0);
   }
 };
 
@@ -144,7 +148,7 @@ template <typename Token>
 struct ForwardLink {
   using Label = fst::StdArc::Label;
 
-  Token *next_tok;      // the next token [or NULL if represents final-state]
+  Token *next_tok;      // the next token [or nullptr if represents final-state]
   Label ilabel;         // ilabel on arc
   Label olabel;         // olabel on arc
   float graph_cost;     // graph cost of traversing arc (contains LM, etc.)
@@ -438,11 +442,10 @@ class LatticeFasterDecoderTpl {
   // head of per-frame list of Tokens (list is in topological order),
   // and something saying whether we ever pruned it using PruneForwardLinks.
   struct TokenList {
-    Token *toks;
-    bool must_prune_forward_links;
-    bool must_prune_tokens;
-    TokenList()
-        : toks(NULL), must_prune_forward_links(true), must_prune_tokens(true) {}
+    Token *toks = nullptr;
+    bool must_prune_forward_links = true;
+    bool must_prune_tokens = true;
+    TokenList() = default;
   };
 
   using Elem = typename HashList<StateId, Token *>::Elem;
@@ -461,7 +464,7 @@ class LatticeFasterDecoderTpl {
   // singly linked list of tokens active on this frame (whose head is at
   // active_toks_[frame]).  The frame_plus_one argument is the acoustic frame
   // index plus one, which is used to index into the active_toks_ array.
-  // Returns the Token pointer.  Sets "changed" (if non-NULL) to true if the
+  // Returns the Token pointer.  Sets "changed" (if non-nullptr) to true if the
   // token was newly created or the cost changed.
   // If Token == StdToken, the 'backpointer' argument has no purpose (and will
   // hopefully be optimized out).
@@ -482,16 +485,16 @@ class LatticeFasterDecoderTpl {
                          bool *links_pruned, float delta);
 
   // This function computes the final-costs for tokens active on the final
-  // frame.  It outputs to final-costs, if non-NULL, a map from the Token*
+  // frame.  It outputs to final-costs, if non-nullptr, a map from the Token*
   // pointer to the final-prob of the corresponding state, for all Tokens
   // that correspond to states that have final-probs.  This map will be
   // empty if there were no final-probs.  It outputs to
-  // final_relative_cost, if non-NULL, the difference between the best
+  // final_relative_cost, if non-nullptr, the difference between the best
   // forward-cost including the final-prob cost, and the best forward-cost
   // without including the final-prob cost (this will usually be positive), or
   // infinity if there were no final-probs.  [c.f. FinalRelativeCost(), which
   // outputs this quanitity].  It outputs to final_best_cost, if
-  // non-NULL, the lowest for any token t active on the final frame, of
+  // non-nullptr, the lowest for any token t active on the final frame, of
   // forward-cost[t] + final-cost[t], where final-cost[t] is the final-cost in
   // the graph of the state corresponding to token t, or the best of
   // forward-cost[t] if there were no final-probs active on the final frame.
@@ -568,9 +571,9 @@ class LatticeFasterDecoderTpl {
   /// The configuration (beams and limits).
   LatticeFasterDecoderConfig config_;
   /// Number of tokens currently allocated (for hash sizing).
-  int32_t num_toks_;  // current total #toks allocated...
+  int32_t num_toks_ = 0;  // current total #toks allocated...
   /// Latch so the "no tokens alive" warning prints once per utterance.
-  bool warned_;
+  bool warned_ = false;
 
   /// decoding_finalized_ is true if someone called FinalizeDecoding().  [note,
   /// calling this is optional].  If true, it's forbidden to decode more.  Also,
@@ -580,12 +583,12 @@ class LatticeFasterDecoderTpl {
   /// of the tokens on the last frame are freed, so we free the list from toks_
   /// to avoid having dangling pointers hanging around.
   /// Whether FinalizeDecoding() has run for the current utterance.
-  bool decoding_finalized_;
+  bool decoding_finalized_ = false;
   /// For the meaning of the next 3 variables, see the comment for
   /// decoding_finalized_ above., and ComputeFinalCosts().
   std::unordered_map<Token *, float> final_costs_;
-  float final_relative_cost_;
-  float final_best_cost_;
+  float final_relative_cost_ = 0.0f;
+  float final_best_cost_ = 0.0f;
 
   // Memory pools for storing tokens and forward links.
   // We use it to decrease the work put on allocator and to move some of data

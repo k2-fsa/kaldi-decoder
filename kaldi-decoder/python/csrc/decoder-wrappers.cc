@@ -17,17 +17,20 @@ namespace kaldi_decoder {
 
 static void PybindAlignConfig(py::module *m) {
   using PyClass = AlignConfig;
-  auto cls = py::class_<PyClass>(
-      *m, "AlignConfig",
-      R"doc(Alignment beam settings (kaldi's ``gmm-align-compiled`` flags).)doc")
-      .def(py::init<float, float, bool>(), py::arg("beam") = 200.0,
-           py::arg("retry_beam") = 0.0, py::arg("careful") = false)
-      .def_readwrite("beam", &PyClass::beam,
-                     R"doc(Wide alignment beam (kaldi ``--beam``, default 200).)doc")
-      .def_readwrite("retry_beam", &PyClass::retry_beam,
-                     R"doc(Retry beam on failure; 0 disables (kaldi ``--retry-beam``).)doc")
-      .def_readwrite("careful", &PyClass::careful,
-                     R"doc(Careful alignment: detects "blind alley" failures
+  auto cls =
+      py::class_<PyClass>(
+          *m, "AlignConfig",
+          R"doc(Alignment beam settings (kaldi's ``gmm-align-compiled`` flags).)doc")
+          .def(py::init<float, float, bool>(), py::arg("beam") = 200.0,
+               py::arg("retry_beam") = 0.0, py::arg("careful") = false)
+          .def_readwrite(
+              "beam", &PyClass::beam,
+              R"doc(Wide alignment beam (kaldi ``--beam``, default 200).)doc")
+          .def_readwrite(
+              "retry_beam", &PyClass::retry_beam,
+              R"doc(Retry beam on failure; 0 disables (kaldi ``--retry-beam``).)doc")
+          .def_readwrite("careful", &PyClass::careful,
+                         R"doc(Careful alignment: detects "blind alley" failures
 (kaldi ``--careful``); MODIFIES the graph.)doc");
 }
 
@@ -52,8 +55,7 @@ static void PybindAlignUtteranceWrapper(py::module *m) {
       py::arg("config"), py::arg("utt"), py::arg("acoustic_scale"),
       py::arg("fst"), py::arg("decodable"), py::arg("num_done"),
       py::arg("num_error"), py::arg("num_retried"), py::arg("tot_like"),
-      py::arg("frame_count"),
-      py::call_guard<py::gil_scoped_release>(),
+      py::arg("frame_count"), py::call_guard<py::gil_scoped_release>(),
       R"doc(Forced-align one utterance (kaldi's ``gmm-align-compiled`` core).
 
 Returns ``(num_done, num_error, num_retried, tot_like, frame_count,
@@ -84,10 +86,9 @@ static void PybindDecodeUtteranceLatticeSimple(py::module *m) {
         std::vector<int32_t> words;
         double log_like = 0;
         fst::VectorFst<fst::LatticeArc> lat;
-        bool succeeded =
-            DecodeUtteranceLatticeSimple(decoder, decodable, trans_model, utt,
-                                         allow_partial, acoustic_scale,
-                                         &alignments, &words, &log_like, &lat);
+        bool succeeded = DecodeUtteranceLatticeSimple(
+            decoder, decodable, trans_model, utt, allow_partial, acoustic_scale,
+            &alignments, &words, &log_like, &lat);
         return std::make_tuple(succeeded, alignments, words, log_like, lat);
       },
       py::arg("decoder"), py::arg("decodable"), py::arg("trans_model"),
@@ -122,10 +123,9 @@ static void PybindDecodeUtteranceLatticeFaster(py::module *m) {
         std::vector<int32_t> words;
         double log_like = 0;
         fst::VectorFst<fst::LatticeArc> lat;
-        bool succeeded =
-            DecodeUtteranceLatticeFaster(decoder, decodable, trans_model, utt,
-                                         allow_partial, acoustic_scale,
-                                         &alignments, &words, &log_like, &lat);
+        bool succeeded = DecodeUtteranceLatticeFaster(
+            decoder, decodable, trans_model, utt, allow_partial, acoustic_scale,
+            &alignments, &words, &log_like, &lat);
         return std::make_tuple(succeeded, alignments, words, log_like, lat);
       },
       py::arg("decoder"), py::arg("decodable"), py::arg("trans_model"),
@@ -151,9 +151,8 @@ static void PybindLatticeBestPath(py::module *m) {
   m->def(
       "lattice_best_path",
       [](const fst::VectorFst<fst::LatticeArc> &lat, float lm_scale,
-         float acoustic_scale)
-          -> std::tuple<bool, std::vector<int32_t>, std::vector<int32_t>,
-                        double> {
+         float acoustic_scale) -> std::tuple<bool, std::vector<int32_t>,
+                                             std::vector<int32_t>, double> {
         std::vector<int32_t> alignments;
         std::vector<int32_t> words;
         double log_like = 0;
@@ -161,8 +160,8 @@ static void PybindLatticeBestPath(py::module *m) {
                                   &words, &log_like);
         return std::make_tuple(ok, alignments, words, log_like);
       },
-      py::arg("lat"), py::arg("lm_scale") = 1.0, py::arg("acoustic_scale") = 1.0,
-      py::call_guard<py::gil_scoped_release>(),
+      py::arg("lat"), py::arg("lm_scale") = 1.0,
+      py::arg("acoustic_scale") = 1.0, py::call_guard<py::gil_scoped_release>(),
       R"doc(1-best of a lattice under lm/acoustic scaling (kaldi's
 `lattice-best-path <https://github.com/kaldi-asr/kaldi/blob/master/src/latbin/lattice-best-path.cc>`_).
 

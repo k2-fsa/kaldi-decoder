@@ -49,9 +49,11 @@ struct DeterminizeLatticePrunedOptions {
   int max_arcs;
   /// Retry cutoff for the pruned determinization (kaldi @c retry_cutoff).
   float retry_cutoff;
-  DeterminizeLatticePrunedOptions(float delta = fst::kDelta, int max_mem = -1,
-                                  int max_loop = -1, int max_states = -1,
-                                  int max_arcs = -1, float retry_cutoff = 0.5)
+  explicit DeterminizeLatticePrunedOptions(float delta = fst::kDelta,
+                                           int max_mem = -1, int max_loop = -1,
+                                           int max_states = -1,
+                                           int max_arcs = -1,
+                                           float retry_cutoff = 0.5)
       : delta(delta),
         max_mem(max_mem),
         max_loop(max_loop),
@@ -105,6 +107,9 @@ struct DeterminizeLatticePhonePrunedOptions {
   /// (kaldi @c minimize).
   bool minimize;
 
+  // Used as a default argument (= T()); explicit would break the
+  // copy-initialization there.
+  // NOLINTNEXTLINE(cppcoreguidelines-explicit-constructor,misc-explicit-constructor)
   DeterminizeLatticePhonePrunedOptions(float delta = fst::kDelta,
                                        int32_t max_mem = 50000000,
                                        bool phone_determinize = true,

@@ -101,6 +101,14 @@ ctest --output-on-failure     # gtest + python tests (<name>_py)
    `kaldi-decoder-core` always STATIC (+PIC); deps only via `./cmake`
    (FetchContent pattern); test on all platforms (linux/macos x64+arm64,
    windows x64+arm64) with Windows-safe python test registration.
+8. **C++ declaration style**: initialize with `Type x = 0;` — NEVER brace
+   style (`Type x{0};` / `Type x{};`); one declarator per line — NEVER
+   `Type x, y;` (write `Type x;` and `Type y;` on separate lines).
+9. **if/else always use braces `{}`**, even for a single statement
+   (`if (x) { return; }`, never `if (x) return;`).
+10. **Blank lines for readability**: separate logical blocks with blank
+   lines (between declarations groups, before/after `if`/`for` blocks,
+   around `return`) — follow the style of `../sherpa-onnx/sherpa-onnx/csrc`.
 6. **Memory safety**: python/C++ boundary objects cross via borrow/take with
    strict ownership (creator frees; `borrow` non-owning, `take` transfers).
    No leaks, no use-after-free; cover lifetimes in tests.  Decoder

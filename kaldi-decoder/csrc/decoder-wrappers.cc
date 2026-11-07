@@ -9,13 +9,14 @@
 
 #include "kaldi-decoder/csrc/decoder-wrappers.h"
 
+#include <utility>
 #include <vector>
 
+#include "fst/shortest-path.h"
 #include "kaldi-decoder/csrc/faster-decoder.h"
 #include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/fstext-utils.h"
 #include "kaldifst/csrc/lattice-utils.h"
-#include "fst/shortest-path.h"
 
 namespace kaldi_decoder {
 
@@ -35,7 +36,7 @@ void AlignUtteranceWrapper(
   if ((config.retry_beam != 0 && config.retry_beam <= config.beam) ||
       config.beam <= 0.0) {
     KALDI_DECODER_ERR << "Beams do not make sense: beam " << config.beam
-            << ", retry-beam " << config.retry_beam;
+                      << ", retry-beam " << config.retry_beam;
   }
 
   if (fst->Start() == fst::kNoStateId) {
@@ -64,7 +65,7 @@ void AlignUtteranceWrapper(
     }
 
     KALDI_DECODER_WARN << "Retrying utterance " << utt << " with beam "
-             << config.retry_beam;
+                       << config.retry_beam;
 
     decode_opts.beam = config.retry_beam;
     decoder.SetOptions(decode_opts);
@@ -74,7 +75,7 @@ void AlignUtteranceWrapper(
 
   if (!ans) {  // Still did not reach final state.
     KALDI_DECODER_WARN << "Did not successfully decode file " << utt
-             << ", len = " << decodable->NumFramesReady();
+                       << ", len = " << decodable->NumFramesReady();
     if (num_error != nullptr) {
       (*num_error)++;
     }
@@ -87,7 +88,7 @@ void AlignUtteranceWrapper(
 
   if (decoded.NumStates() == 0) {
     KALDI_DECODER_WARN << "Error getting best path from decoder (likely a bug)";
-    if (num_error != NULL) {
+    if (num_error != nullptr) {
       (*num_error)++;
     }
 
@@ -149,10 +150,8 @@ bool DecodeUtteranceLatticeSimple(
     LatticeSimpleDecoder &decoder,  // NOLINT not const but is really an input.
     DecodableInterface &decodable,  // NOLINT not const but is really an input.
     const TransitionInformation &trans_model, const std::string &utt,
-    bool allow_partial, float acoustic_scale,
-    std::vector<int32_t> *alignments,
-    std::vector<int32_t> *words, double *like_ptr,
-    fst::Lattice *lat_out) {
+    bool allow_partial, float acoustic_scale, std::vector<int32_t> *alignments,
+    std::vector<int32_t> *words, double *like_ptr, fst::Lattice *lat_out) {
   if (!decoder.Decode(&decodable)) {
     KALDI_DECODER_WARN << "Failed to decode utterance with id " << utt;
     return false;
@@ -163,16 +162,16 @@ bool DecodeUtteranceLatticeSimple(
   if (!decoder.ReachedFinal()) {
     if (allow_partial) {
       KALDI_DECODER_WARN << "Outputting partial output for utterance " << utt
-               << " since no final-state reached\n";
+                         << " since no final-state reached\n";
     } else {
       KALDI_DECODER_WARN << "Not producing output for utterance " << utt
-               << " since no final-state reached and "
-               << "--allow-partial=false.\n";
+                         << " since no final-state reached and "
+                         << "--allow-partial=false.\n";
       return false;
     }
   }
 
-  double likelihood;
+  double likelihood = 0.0;
   fst::LatticeWeight weight = fst::LatticeWeight::Zero();
 
   // Likelihood as in kaldi: total cost of the decode-time best path.
@@ -189,12 +188,12 @@ bool DecodeUtteranceLatticeSimple(
   // alignments come from the DECODE-TIME best path -- this is exactly what
   // gmm-latgen-faster writes to its words/alignment tables.  (lm-scale /
   // word-ins-penalty scoring is a separate step; see LatticeBestPath.)
-  *alignments = tmp_alignment;
-  *words = tmp_words;
+  *alignments = std::move(tmp_alignment);
+  *words = std::move(tmp_words);
 
   // Optionally return the lattice exactly as kaldi writes it: with the
   // acoustic costs divided by acoustic_scale (skipped when it is 0).
-  if (lat_out != NULL) {
+  if (lat_out != nullptr) {
     if (!decoder.GetRawLattice(lat_out))
       KALDI_DECODER_ERR << "Failed to get raw lattice for utterance " << utt;
     fst::Connect(lat_out);
@@ -211,10 +210,8 @@ bool DecodeUtteranceLatticeFaster(
         &decoder,                   // NOLINT not const but is really an input.
     DecodableInterface &decodable,  // NOLINT not const but is really an input.
     const TransitionInformation &trans_model, const std::string &utt,
-    bool allow_partial, float acoustic_scale,
-    std::vector<int32_t> *alignments,
-    std::vector<int32_t> *words, double *like_ptr,
-    fst::Lattice *lat_out) {
+    bool allow_partial, float acoustic_scale, std::vector<int32_t> *alignments,
+    std::vector<int32_t> *words, double *like_ptr, fst::Lattice *lat_out) {
   using fst::VectorFst;
 
   if (!decoder.Decode(&decodable)) {
@@ -224,16 +221,16 @@ bool DecodeUtteranceLatticeFaster(
   if (!decoder.ReachedFinal()) {
     if (allow_partial) {
       KALDI_DECODER_WARN << "Outputting partial output for utterance " << utt
-               << " since no final-state reached\n";
+                         << " since no final-state reached\n";
     } else {
       KALDI_DECODER_WARN << "Not producing output for utterance " << utt
-               << " since no final-state reached and "
-               << "--allow-partial=false.\n";
+                         << " since no final-state reached and "
+                         << "--allow-partial=false.\n";
       return false;
     }
   }
 
-  double likelihood;
+  double likelihood = 0.0;
   fst::LatticeWeight weight = fst::LatticeWeight::Zero();
 
   // Likelihood as in kaldi: total cost of the decode-time best path.
@@ -250,12 +247,12 @@ bool DecodeUtteranceLatticeFaster(
   // alignments come from the DECODE-TIME best path -- this is exactly what
   // gmm-latgen-faster writes to its words/alignment tables.  (lm-scale /
   // word-ins-penalty scoring is a separate step; see LatticeBestPath.)
-  *alignments = tmp_alignment;
-  *words = tmp_words;
+  *alignments = std::move(tmp_alignment);
+  *words = std::move(tmp_words);
 
   // Optionally return the lattice exactly as kaldi writes it: with the
   // acoustic costs divided by acoustic_scale (skipped when it is 0).
-  if (lat_out != NULL) {
+  if (lat_out != nullptr) {
     if (!decoder.GetRawLattice(lat_out))
       KALDI_DECODER_ERR << "Failed to get raw lattice for utterance " << utt;
     fst::Connect(lat_out);
@@ -269,35 +266,29 @@ template bool DecodeUtteranceLatticeFaster(
     LatticeFasterDecoderTpl<fst::Fst<fst::StdArc>> &decoder,  // NOLINT
     DecodableInterface &decodable,                            // NOLINT
     const TransitionInformation &trans_model, const std::string &utt,
-    bool allow_partial, float acoustic_scale,
-    std::vector<int32_t> *alignments,
-    std::vector<int32_t> *words, double *like_ptr,
-    fst::Lattice *lat_out);
+    bool allow_partial, float acoustic_scale, std::vector<int32_t> *alignments,
+    std::vector<int32_t> *words, double *like_ptr, fst::Lattice *lat_out);
 
 template bool DecodeUtteranceLatticeFaster(
     LatticeFasterDecoderTpl<fst::ConstFst<fst::StdArc>> &decoder,  // NOLINT
     DecodableInterface &decodable,                                 // NOLINT
     const TransitionInformation &trans_model, const std::string &utt,
-    bool allow_partial, float acoustic_scale,
-    std::vector<int32_t> *alignments,
-    std::vector<int32_t> *words, double *like_ptr,
-    fst::Lattice *lat_out);
+    bool allow_partial, float acoustic_scale, std::vector<int32_t> *alignments,
+    std::vector<int32_t> *words, double *like_ptr, fst::Lattice *lat_out);
 
 template bool DecodeUtteranceLatticeFaster(
     LatticeFasterDecoderTpl<fst::VectorFst<fst::StdArc>> &decoder,  // NOLINT
     DecodableInterface &decodable,                                  // NOLINT
     const TransitionInformation &trans_model, const std::string &utt,
-    bool allow_partial, float acoustic_scale,
-    std::vector<int32_t> *alignments,
-    std::vector<int32_t> *words, double *like_ptr,
-    fst::Lattice *lat_out);
+    bool allow_partial, float acoustic_scale, std::vector<int32_t> *alignments,
+    std::vector<int32_t> *words, double *like_ptr, fst::Lattice *lat_out);
 
 bool LatticeBestPath(const fst::Lattice &lat, float lm_scale,
                      float acoustic_scale, std::vector<int32_t> *alignments,
                      std::vector<int32_t> *words, double *like_ptr) {
   alignments->clear();
   words->clear();
-  if (like_ptr != NULL) *like_ptr = 0;
+  if (like_ptr != nullptr) *like_ptr = 0;
   // This is the core of kaldi's `lattice-best-path`
   // (kaldi/src/latbin/lattice-best-path.cc): ScaleLattice(LatticeScale) then
   // ShortestPath.  Keeping the LatticeWeight (V1/V2) formulation preserves
@@ -315,7 +306,7 @@ bool LatticeBestPath(const fst::Lattice &lat, float lm_scale,
   }
   fst::LatticeWeight weight;
   fst::GetLinearSymbolSequence(best_path, alignments, words, &weight);
-  if (like_ptr != NULL) *like_ptr = -(weight.Value1() + weight.Value2());
+  if (like_ptr != nullptr) *like_ptr = -(weight.Value1() + weight.Value2());
   return true;
 }
 

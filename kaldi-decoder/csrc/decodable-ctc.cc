@@ -27,9 +27,9 @@ float DecodableCtc::LogLikelihood(int32_t frame, int32_t index) {
   // construction
   if (index > num_cols_ || index <= 0 || frame < offset_ ||
       frame >= offset_ + num_rows_)
-    KALDI_DECODER_ERR << "Invalid (frame, index) = (" << frame << ", "
-                      << index << ") for matrix of size " << num_rows_
-                      << " x " << num_cols_ << " with offset " << offset_;
+    KALDI_DECODER_ERR << "Invalid (frame, index) = (" << frame << ", " << index
+                      << ") for matrix of size " << num_rows_ << " x "
+                      << num_cols_ << " with offset " << offset_;
 
   return *(p_ + (frame - offset_) * num_cols_ + index - 1);
 }

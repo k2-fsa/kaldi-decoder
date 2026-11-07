@@ -61,3 +61,42 @@ if(KALDI_DECODER_ENABLE_TESTS)
     kaldi_decoder_add_test(${source})
   endforeach()
 endif()
+
+# ---- clang-tidy (top-level project only) ------------------------------------
+# Sources to lint with `make check` (clang-tidy).  Keep this list in sync
+# with scripts/check_style_clang_format.sh.  Don't pass --config-file:
+# clang-tidy picks up the repo-root .clang-tidy automatically.
+# Only lint files that are actually compiled (they have compile commands).
+set(srcs_to_check)
+foreach(source IN LISTS srcs test_srcs)
+  list(APPEND srcs_to_check ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+endforeach()
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+
+# The python bindings are compiled into the extension module.
+file(GLOB _python_srcs ${PROJECT_SOURCE_DIR}/kaldi-decoder/python/csrc/*.cc)
+list(APPEND srcs_to_check ${_python_srcs})
+
+# For clang-tidy.  Requires CMAKE_EXPORT_COMPILE_COMMANDS (set at the
+# top level) so that compile_commands.json exists in the build dir.
+#
+# On macOS, pass the SDK path so that the system headers (<cmath> etc.)
+# are found; without it clang-tidy reports bogus parse errors.
+set(_tidy_extra_args)
+if(APPLE)
+  execute_process(
+    COMMAND xcrun --show-sdk-path
+    OUTPUT_VARIABLE _tidy_sdk
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  list(APPEND _tidy_extra_args "--extra-arg=-isysroot${_tidy_sdk}")
+endif()
+
+add_custom_target(
+  clang-tidy-check
+  clang-tidy ${_tidy_extra_args} -p ${CMAKE_BINARY_DIR}/compile_commands.json
+             ${srcs_to_check}
+  DEPENDS ${srcs})
+
+add_custom_target(check DEPENDS clang-tidy-check)
+
+endif()  # top-level project only

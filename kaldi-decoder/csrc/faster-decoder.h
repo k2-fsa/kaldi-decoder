@@ -23,7 +23,9 @@
    @file faster-decoder.h
    @brief Beam-pruned Viterbi decoder (kaldi's FasterDecoder).
 
-   This file is copied/modified from @kfile{src/decoder/faster-decoder.h}.  The fastest decoder; for FSTs without self-loops and without the need for a lattice.  Use LatticeFasterDecoderTpl for general HMM graphs.
+   This file is copied/modified from @kfile{src/decoder/faster-decoder.h}.  The
+   fastest decoder; for FSTs without self-loops and without the need for a
+   lattice.  Use LatticeFasterDecoderTpl for general HMM graphs.
 
    @see LatticeFasterDecoderTpl, DecodableInterface.
 */
@@ -49,7 +51,7 @@ struct FasterDecoderOptions {
   /// (kaldi @c hash_ratio).
   float hash_ratio;
 
-  /*implicit*/ FasterDecoderOptions(
+  explicit FasterDecoderOptions(
       float beam = 16.0,
       int32_t max_active = std::numeric_limits<int32_t>::max(),
       int32_t min_active = 20, float beam_delta = 0.5, float hash_ratio = 2.0)
@@ -168,12 +170,12 @@ class FasterDecoder {
     // we can work out the acoustic part from difference between
     // "cost_" and prev->cost_.
     Token *prev_;
-    int32_t ref_count_;
+    int32_t ref_count_ = 1;
     // if you are looking for weight_ here, it was removed and now we just have
     // cost_, which corresponds to ConvertToCost(weight_).
     double cost_;
     inline Token(const Arc &arc, float ac_cost, Token *prev)
-        : arc_(arc), prev_(prev), ref_count_(1) {
+        : arc_(arc), prev_(prev) {
       if (prev) {
         prev->ref_count_++;
         cost_ = prev->cost_ + arc.weight.Value() + ac_cost;
@@ -183,8 +185,7 @@ class FasterDecoder {
     }
 
     // for epsilon transitions, i.e., non-emitting arcs
-    inline Token(const Arc &arc, Token *prev)
-        : arc_(arc), prev_(prev), ref_count_(1) {
+    inline Token(const Arc &arc, Token *prev) : arc_(arc), prev_(prev) {
       if (prev) {
         prev->ref_count_++;
         cost_ = prev->cost_ + arc.weight.Value();
@@ -242,7 +243,7 @@ class FasterDecoder {
   // make it class member to avoid internal new/delete.
 
   // Keep track of the number of frames decoded in the current file.
-  int32_t num_frames_decoded_;
+  int32_t num_frames_decoded_ = -1;
 
   // It might seem unclear why we call ClearToks(toks_.Clear()).
   // There are two separate cleanup tasks we need to do at when we start a new

@@ -12,7 +12,7 @@
 
 namespace kaldi_decoder {
 
-enum class LogLevel {
+enum class LogLevel {  // NOLINT -- keep int base for ABI simplicity
   kInfo = 0,
   kWarn = 1,
   kError = 2,  // abort the program
@@ -43,7 +43,7 @@ class Logger {
     return *this;
   }
 
-  ~Logger() noexcept(false) {
+  ~Logger() noexcept(false) {  // NOLINT -- throw is this repo's assert channel
     if (level_ == LogLevel::kError) {
       // throw std::runtime_error(os_.str());
       // abort();

@@ -74,8 +74,9 @@ Python object alive for the whole decode.
            R"doc(Whether ``frame`` is the last frame with scores available.
 
 For streaming decodables this is only true once the input is finished.)doc")
-      .def("num_frames_ready", &PyClass::NumFramesReady,
-           R"doc(Number of frames with scores available; may grow over time.)doc")
+      .def(
+          "num_frames_ready", &PyClass::NumFramesReady,
+          R"doc(Number of frames with scores available; may grow over time.)doc")
       .def("num_indices", &PyClass::NumIndices,
            R"doc(Number of valid indices (transition-ids); indices are
 1-based.)doc");

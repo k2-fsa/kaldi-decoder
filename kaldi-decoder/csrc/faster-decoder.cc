@@ -32,7 +32,8 @@ FasterDecoder::FasterDecoder(const fst::Fst<fst::StdArc> &fst,
 }
 
 void FasterDecoder::ClearToks(Elem *list) {
-  for (Elem *e = list, *e_tail; e != nullptr; e = e_tail) {
+  Elem *e_tail = nullptr;
+  for (Elem *e = list; e != nullptr; e = e_tail) {
     Token::TokenDelete(e->val);
     e_tail = e->tail;
     toks_.Delete(e);
@@ -155,8 +156,8 @@ void FasterDecoder::AdvanceDecoding(DecodableInterface *decodable,
 double FasterDecoder::ProcessEmitting(DecodableInterface *decodable) {
   int32_t frame = num_frames_decoded_;
   Elem *last_toks = toks_.Clear();
-  size_t tok_cnt;
-  float adaptive_beam;
+  size_t tok_cnt = 0;
+  float adaptive_beam = 0.0f;
   Elem *best_elem = nullptr;
   double weight_cutoff =
       GetCutoff(last_toks, &tok_cnt, &adaptive_beam, &best_elem);
@@ -193,8 +194,8 @@ double FasterDecoder::ProcessEmitting(DecodableInterface *decodable) {
   // the tokens are now owned here, in last_toks, and the hash is empty.
   // 'owned' is a complex thing here; the point is we need to call TokenDelete
   // on each elem 'e' to let toks_ know we're done with them.
-  for (Elem *e = last_toks, *e_tail; e != nullptr;
-       e = e_tail) {  // loop this way
+  Elem *e_tail = nullptr;
+  for (Elem *e = last_toks; e != nullptr; e = e_tail) {  // loop this way
     // n++;
     // because we delete "e" as we go.
     StateId state = e->key;

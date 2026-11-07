@@ -15,14 +15,6 @@
 namespace kaldi_decoder {
 
 template <class I, class T>
-HashList<I, T>::HashList() {
-  list_head_ = nullptr;
-  bucket_list_tail_ = static_cast<size_t>(-1);  // invalid.
-  hash_size_ = 0;
-  freed_head_ = nullptr;
-}
-
-template <class I, class T>
 void HashList<I, T>::SetSize(size_t size) {
   hash_size_ = size;
   KALDI_DECODER_ASSERT(list_head_ == nullptr &&
@@ -105,15 +97,16 @@ template <class I, class T>
 HashList<I, T>::~HashList() {
   // First test whether we had any memory leak within the
   // HashList, i.e. things for which the user did not call Delete().
-  size_t num_in_list = 0, num_allocated = 0;
+  size_t num_in_list = 0;
+  size_t num_allocated = 0;
 
   for (Elem *e = freed_head_; e != nullptr; e = e->tail) {
     num_in_list++;
   }
 
-  for (size_t i = 0; i < allocated_.size(); i++) {
+  for (auto *blk : allocated_) {
     num_allocated += allocate_block_size_;
-    delete[] allocated_[i];
+    delete[] blk;
   }
 
   if (num_in_list != num_allocated) {

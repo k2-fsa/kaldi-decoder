@@ -19,7 +19,9 @@
    @file simple-decoder.h
    @brief Simple Viterbi decoder (kaldi's SimpleDecoder).
 
-   This file is copied/modified from @kfile{src/decoder/simple-decoder.h}.  Keeps one token per FST state; good for small graphs or as a reference decoder.  See kaldi's doc/decoders.dox for the algorithm.
+   This file is copied/modified from @kfile{src/decoder/simple-decoder.h}. Keeps
+   one token per FST state; good for small graphs or as a reference decoder. See
+   kaldi's doc/decoders.dox for the algorithm.
 
    @see FasterDecoder, LatticeSimpleDecoder, DecodableInterface.
 */
@@ -125,10 +127,9 @@ class SimpleDecoder {
                            // store the acoustic and graph cost, in case
                            // we need to produce lattice-formatted output.
     Token *prev_;
-    int32_t ref_count_;
+    int32_t ref_count_ = 1;
     double cost_;  // accumulated total cost up to this point.
-    Token(const StdArc &arc, float acoustic_cost, Token *prev)
-        : prev_(prev), ref_count_(1) {
+    Token(const StdArc &arc, float acoustic_cost, Token *prev) : prev_(prev) {
       arc_.ilabel = arc.ilabel;
       arc_.olabel = arc.olabel;
       arc_.weight = fst::LatticeWeight(arc.weight.Value(), acoustic_cost);

@@ -4,6 +4,8 @@
 
 #include "kaldi-decoder/python/csrc/transition-information.h"
 
+#include <vector>
+
 #include "kaldi-decoder/csrc/transition-information.h"
 
 namespace kaldi_decoder {
@@ -103,8 +105,7 @@ interchangeable in alignments.)doc")
            &PyClass::TransitionIdIsStartOfPhone, py::arg("trans_id"),
            R"doc(Whether ``trans_id`` starts a new phone.)doc")
       .def("transition_id_to_phone", &PyClass::TransitionIdToPhone,
-           py::arg("trans_id"),
-           R"doc(Phone index of ``trans_id``.)doc")
+           py::arg("trans_id"), R"doc(Phone index of ``trans_id``.)doc")
       .def("is_final", &PyClass::IsFinal, py::arg("trans_id"),
            R"doc(Whether ``trans_id`` is a final (transition-to-final)
 transition.)doc")
@@ -116,8 +117,7 @@ transition.)doc")
       .def("transition_id_to_pdf_array", &PyClass::TransitionIdToPdfArray,
            R"doc(The whole tid->pdf map: index 0 unused, transition-ids are
 1-based.)doc")
-      .def("num_pdfs", &PyClass::NumPdfs,
-           R"doc(Number of distinct pdfs.)doc")
+      .def("num_pdfs", &PyClass::NumPdfs, R"doc(Number of distinct pdfs.)doc")
       .def("num_transition_ids", &PyClass::NumTransitionIds,
            R"doc(Number of transition-ids (``len(tid_to_pdf) - 1``).)doc");
   cls.attr("__module__") = "kaldi_decoder";

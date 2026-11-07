@@ -128,14 +128,16 @@ class DecodableMatrixScaledMapped : public DecodableInterface {
   /// @param [in] tid    Transition-id, 1-based.
   /// @return $s \cdot L_{t,\pi(\mathit{tid})}$.
   float LogLikelihood(int32_t frame, int32_t tid) override {
-    KALDI_DECODER_PARANOID_ASSERT(tid >= 1 &&
-                                  tid < static_cast<int32_t>(tid_to_pdf_.size()));
+    KALDI_DECODER_PARANOID_ASSERT(
+        tid >= 1 && tid < static_cast<int32_t>(tid_to_pdf_.size()));
     KALDI_DECODER_PARANOID_ASSERT(frame >= 0 && frame < NumFramesReady());
     return scale_ * (*likes_)(frame, tid_to_pdf_[tid]);
   }
 
   /// @return The number of transition-ids (indices are one-based).
-  int32_t NumIndices() const override { return trans_model_.NumTransitionIds(); }
+  int32_t NumIndices() const override {
+    return trans_model_.NumTransitionIds();
+  }
 
   /// Destructor; deletes the matrix if this object owns it.
   ~DecodableMatrixScaledMapped() override {
@@ -206,7 +208,7 @@ class DecodableMatrixMapped : public DecodableInterface {
   /// Non-null only when this object owns @c likes_ (deleted in dtor).
   const FloatMatrix *likes_to_delete_;
   /// Frame index of row 0.
-  int32_t frame_offset_;
+  int32_t frame_offset_ = 0;
   KALDI_DECODER_DISALLOW_COPY_AND_ASSIGN(DecodableMatrixMapped);
 };
 
@@ -257,8 +259,8 @@ class DecodableMatrixMappedOffset : public DecodableInterface {
   }
 
   float LogLikelihood(int32_t frame, int32_t tid) override {
-    KALDI_DECODER_PARANOID_ASSERT(tid >= 1 &&
-                                  tid < static_cast<int32_t>(tid_to_pdf_.size()));
+    KALDI_DECODER_PARANOID_ASSERT(
+        tid >= 1 && tid < static_cast<int32_t>(tid_to_pdf_.size()));
     KALDI_DECODER_PARANOID_ASSERT(frame >= frame_offset_ &&
                                   frame < NumFramesReady());
     int32_t pdf_id = tid_to_pdf_[tid];
@@ -266,7 +268,9 @@ class DecodableMatrixMappedOffset : public DecodableInterface {
   }
 
   // Note: these indices are 1-based.
-  int32_t NumIndices() const override { return trans_model_.NumTransitionIds(); }
+  int32_t NumIndices() const override {
+    return trans_model_.NumTransitionIds();
+  }
 
   // nothing special to do in destructor.
   ~DecodableMatrixMappedOffset() override = default;
@@ -279,9 +283,9 @@ class DecodableMatrixMappedOffset : public DecodableInterface {
   /// Stored per-pdf scores of the frames still available (owned).
   FloatMatrix loglikes_;
   /// Frame index of row 0 of @c loglikes_.
-  int32_t frame_offset_;
+  int32_t frame_offset_ = 0;
   /// Set by InputIsFinished(); gates IsLastFrame().
-  bool input_is_finished_;
+  bool input_is_finished_ = false;
   KALDI_DECODER_DISALLOW_COPY_AND_ASSIGN(DecodableMatrixMappedOffset);
 };
 

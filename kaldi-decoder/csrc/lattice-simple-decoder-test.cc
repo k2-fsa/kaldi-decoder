@@ -16,6 +16,7 @@
 #include "kaldi-decoder/csrc/decodable-itf.h"
 
 namespace kaldi_decoder {
+namespace {
 
 // Deterministic decodable: score table [frame][label], labels 1-based.
 class TableDecodable : public DecodableInterface {
@@ -25,7 +26,8 @@ class TableDecodable : public DecodableInterface {
       : scores_(scores), num_indices_(num_indices) {}
 
   float LogLikelihood(int32_t frame, int32_t index) override {
-    if (frame < 0 || frame >= static_cast<int32_t>(scores_.size())) return -1e10;
+    if (frame < 0 || frame >= static_cast<int32_t>(scores_.size()))
+      return -1e10;
     if (index < 1 || index > num_indices_) return -1e10;
     return scores_[frame][index - 1];
   }
@@ -112,11 +114,12 @@ std::set<fst::StdArc::Label> AllIlabels(const fst::Lattice &lat) {
   return labels;
 }
 
+}  // namespace
+
 TEST(LatticeSimpleDecoder, LinearGraph) {
   auto graph = MakeLinearGraph();
-  TableDecodable dec({{0.0f, -10.0f, -10.0f, -10.0f},
-                      {-10.0f, 0.0f, -10.0f, -10.0f}},
-                     4);
+  TableDecodable dec(
+      {{0.0f, -10.0f, -10.0f, -10.0f}, {-10.0f, 0.0f, -10.0f, -10.0f}}, 4);
   LatticeSimpleDecoderConfig config;
   LatticeSimpleDecoder decoder(graph, config);
   ASSERT_TRUE(decoder.Decode(&dec));
@@ -135,9 +138,8 @@ TEST(LatticeSimpleDecoder, TwoBranchesAcoustic) {
   config.beam = 16.0;
   config.lattice_beam = 10.0;
 
-  TableDecodable dec_a({{0.0f, -10.0f, -10.0f, -10.0f},
-                        {-10.0f, 0.0f, -10.0f, -10.0f}},
-                       4);
+  TableDecodable dec_a(
+      {{0.0f, -10.0f, -10.0f, -10.0f}, {-10.0f, 0.0f, -10.0f, -10.0f}}, 4);
   {
     LatticeSimpleDecoder decoder(graph, config);
     ASSERT_TRUE(decoder.Decode(&dec_a));
@@ -146,9 +148,8 @@ TEST(LatticeSimpleDecoder, TwoBranchesAcoustic) {
     std::vector<fst::StdArc::Label> expected = {1, 2};
     EXPECT_EQ(BestPathLabels(best), expected);
   }
-  TableDecodable dec_b({{-10.0f, -10.0f, 0.0f, -10.0f},
-                        {-10.0f, -10.0f, -10.0f, 0.0f}},
-                       4);
+  TableDecodable dec_b(
+      {{-10.0f, -10.0f, 0.0f, -10.0f}, {-10.0f, -10.0f, -10.0f, 0.0f}}, 4);
   {
     LatticeSimpleDecoder decoder(graph, config);
     ASSERT_TRUE(decoder.Decode(&dec_b));
@@ -178,9 +179,8 @@ TEST(LatticeSimpleDecoder, GraphWeightGolden) {
 TEST(LatticeSimpleDecoder, RawLatticeKeepsAlternatives) {
   // Soft scores (-1.0 gap) keep both branches inside the lattice beam, so
   // the raw lattice must contain all four labels.
-  TableDecodable soft({{0.0f, -1.0f, -1.0f, -1.0f},
-                       {-1.0f, 0.0f, -1.0f, -1.0f}},
-                      4);
+  TableDecodable soft(
+      {{0.0f, -1.0f, -1.0f, -1.0f}, {-1.0f, 0.0f, -1.0f, -1.0f}}, 4);
   auto graph = MakeTwoBranchGraph(0.0f, 0.0f);
   LatticeSimpleDecoderConfig config;
   LatticeSimpleDecoder decoder(graph, config);

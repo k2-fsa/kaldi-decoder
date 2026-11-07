@@ -34,7 +34,7 @@ FloatVector Softmax(const FloatVector &v, float *log_sum_exp /*= nullptr*/) {
 FloatVector RandnVector(int32_t n, float mean /*= 0*/, float stddev /*= 1*/) {
   std::random_device rd{};
   std::mt19937 gen{rd()};
-  std::normal_distribution<float> d{mean, stddev};
+  std::normal_distribution<float> d(mean, stddev);
 
   FloatVector ans(n);
 
@@ -49,7 +49,7 @@ FloatMatrix RandnMatrix(int32_t rows, int32_t cols, float mean /*= 0*/,
                         float stddev /*= 1*/) {
   std::random_device rd{};
   std::mt19937 gen{rd()};
-  std::normal_distribution<float> d{mean, stddev};
+  std::normal_distribution<float> d(mean, stddev);
 
   FloatMatrix ans(rows, cols);
 
@@ -63,7 +63,7 @@ FloatMatrix RandnMatrix(int32_t rows, int32_t cols, float mean /*= 0*/,
 float Randn(float mean /*= 0*/, float stddev /*= 1*/) {
   std::random_device rd{};
   std::mt19937 gen{rd()};
-  std::normal_distribution<float> d{mean, stddev};
+  std::normal_distribution<float> d(mean, stddev);
 
   return d(gen);
 }

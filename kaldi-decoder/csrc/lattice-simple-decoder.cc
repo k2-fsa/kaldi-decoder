@@ -10,6 +10,8 @@
 
 #include "kaldi-decoder/csrc/lattice-simple-decoder.h"
 
+#include <algorithm>
+
 #include "kaldi-decoder/csrc/kaldi-math.h"
 
 namespace kaldi_decoder {
@@ -35,10 +37,10 @@ void LatticeSimpleDecoder::InitDecoding() {
 
 void LatticeSimpleDecoder::ClearActiveTokens() {  // a cleanup routine, at utt
                                                   // end/begin
-  for (size_t i = 0; i < active_toks_.size(); i++) {
+  for (auto &tok_list : active_toks_) {
     // Delete all tokens alive on this frame, and any forward
     // links they may have.
-    for (Token *tok = active_toks_[i].toks; tok != nullptr;) {
+    for (Token *tok = tok_list.toks; tok != nullptr;) {
       tok->DeleteForwardLinks();
       Token *next_tok = tok->next;
       delete tok;
@@ -77,7 +79,7 @@ bool LatticeSimpleDecoder::Decode(DecodableInterface *decodable) {
 // it's inserted if necessary into cur_toks_ and also into the singly linked
 // list of tokens active on this frame (whose head is at active_toks_[frame]).
 //
-// Returns the Token pointer.  Sets "changed" (if non-NULL) to true
+// Returns the Token pointer.  Sets "changed" (if non-nullptr) to true
 // if the token was newly created or the cost changed.
 LatticeSimpleDecoder::Token *LatticeSimpleDecoder::FindOrAddToken(
     StateId state, int32_t frame, float tot_cost, bool emitting,
@@ -133,14 +135,14 @@ void LatticeSimpleDecoder::ProcessNonemitting() {
   // problem did not improve overall speed.
   std::vector<StateId> queue;
   float best_cost = std::numeric_limits<float>::infinity();
-  for (auto iter = cur_toks_.begin(); iter != cur_toks_.end(); ++iter) {
-    StateId state = iter->first;
+  for (const auto &kv : cur_toks_) {
+    StateId state = kv.first;
 
     if (fst_.NumInputEpsilons(state) != 0) {
       queue.push_back(state);
     }
 
-    best_cost = std::min(best_cost, iter->second->tot_cost);
+    best_cost = std::min(best_cost, kv.second->tot_cost);
   }
 
   if (queue.empty()) {
@@ -172,7 +174,7 @@ void LatticeSimpleDecoder::ProcessNonemitting() {
         float tot_cost = cur_cost + graph_cost;
 
         if (tot_cost < cutoff) {
-          bool changed;
+          bool changed = false;
           Token *new_tok = FindOrAddToken(arc.nextstate, frame + 1, tot_cost,
                                           false, &changed);
 
@@ -248,7 +250,8 @@ void LatticeSimpleDecoder::PruneForwardLinks(int32_t frame,
     changed = false;
     for (Token *tok = active_toks_[frame].toks; tok != nullptr;
          tok = tok->next) {
-      ForwardLink *link, *prev_link = nullptr;
+      ForwardLink *link = nullptr;
+      ForwardLink *prev_link = nullptr;
       // will recompute tok_extra_cost.
       float tok_extra_cost = std::numeric_limits<float>::infinity();
       for (link = tok->links; link != nullptr;) {
@@ -314,7 +317,9 @@ void LatticeSimpleDecoder::PruneTokensForFrame(int32_t frame) {
     KALDI_DECODER_WARN << "No tokens alive [doing pruning]";
   }
 
-  Token *tok, *next_tok, *prev_tok = nullptr;
+  Token *tok = nullptr;
+  Token *next_tok = nullptr;
+  Token *prev_tok = nullptr;
   for (tok = toks; tok != nullptr; tok = next_tok) {
     next_tok = tok->next;
     if (tok->extra_cost == std::numeric_limits<float>::infinity()) {
@@ -343,19 +348,19 @@ void LatticeSimpleDecoder::PruneCurrentTokens(
     return;
   }
   float best_cost = 1.0e+10;  // positive == high cost == bad.
-  for (auto iter = toks->begin(); iter != toks->end(); ++iter) {
-    best_cost = std::min(best_cost, static_cast<float>(iter->second->tot_cost));
+  for (const auto &kv : *toks) {
+    best_cost = std::min(best_cost, static_cast<float>(kv.second->tot_cost));
   }
   std::vector<StateId> retained;
   float cutoff = best_cost + beam;
-  for (auto iter = toks->begin(); iter != toks->end(); ++iter) {
-    if (iter->second->tot_cost < cutoff) {
-      retained.push_back(iter->first);
+  for (const auto &kv : *toks) {
+    if (kv.second->tot_cost < cutoff) {
+      retained.push_back(kv.first);
     }
   }
   std::unordered_map<StateId, Token *> tmp;
-  for (size_t i = 0; i < retained.size(); i++) {
-    tmp[retained[i]] = (*toks)[retained[i]];
+  for (StateId s : retained) {
+    tmp[s] = (*toks)[s];
   }
   KALDI_DECODER_LOG << "Pruned to " << (retained.size()) << " toks.\n";
   tmp.swap(*toks);
@@ -373,9 +378,9 @@ void LatticeSimpleDecoder::ProcessEmitting(DecodableInterface *decodable) {
   // Processes emitting arcs for one frame.  Propagates from
   // prev_toks_ to cur_toks_.
   float cutoff = std::numeric_limits<float>::infinity();
-  for (auto iter = prev_toks_.begin(); iter != prev_toks_.end(); ++iter) {
-    StateId state = iter->first;
-    Token *tok = iter->second;
+  for (const auto &kv : prev_toks_) {
+    StateId state = kv.first;
+    Token *tok = kv.second;
     for (fst::ArcIterator<fst::Fst<Arc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
       const Arc &arc = aiter.Value();
@@ -391,7 +396,7 @@ void LatticeSimpleDecoder::ProcessEmitting(DecodableInterface *decodable) {
 
         // AddToken adds the next_tok to cur_toks_ (if not already present).
         Token *next_tok =
-            FindOrAddToken(arc.nextstate, frame + 1, tot_cost, true, NULL);
+            FindOrAddToken(arc.nextstate, frame + 1, tot_cost, true, nullptr);
 
         // Add ForwardLink from tok to next_tok (put on head of list tok->links)
         tok->links = new ForwardLink(next_tok, arc.ilabel, arc.olabel,
@@ -409,7 +414,8 @@ void LatticeSimpleDecoder::FinalizeDecoding() {
   int32_t num_toks_begin = num_toks_;
   PruneForwardLinksFinal();
   for (int32_t f = final_frame_plus_one - 1; f >= 0; f--) {
-    bool b1, b2;  // values not used.
+    bool b1 = false;  // values not used.
+    bool b2 = false;
     float dontcare = 0.0;
     PruneForwardLinks(f, &b1, &b2, dontcare);
     PruneTokensForFrame(f + 1);
@@ -447,13 +453,14 @@ void LatticeSimpleDecoder::PruneForwardLinksFinal() {
     changed = false;
     for (Token *tok = active_toks_[frame_plus_one].toks; tok != nullptr;
          tok = tok->next) {
-      ForwardLink *link, *prev_link = nullptr;
+      ForwardLink *link = nullptr;
+      ForwardLink *prev_link = nullptr;
       // will recompute tok_extra_cost.  It has a term in it that corresponds
       // to the "final-prob", so instead of initializing tok_extra_cost to
       // infinity below we set it to the difference between the
       // (score+final_prob) of this token, and the best such (score+final_prob).
 
-      float final_cost;
+      float final_cost = 0.0f;
       if (final_costs_.empty()) {
         final_cost = 0.0;
       } else {
@@ -528,13 +535,15 @@ void LatticeSimpleDecoder::ComputeFinalCosts(
   }
 
   float infinity = std::numeric_limits<float>::infinity();
-  float best_cost = infinity, best_cost_with_final = infinity;
+  float best_cost = infinity;
+  float best_cost_with_final = infinity;
 
-  for (auto iter = cur_toks_.begin(); iter != cur_toks_.end(); ++iter) {
-    StateId state = iter->first;
-    Token *tok = iter->second;
+  for (const auto &kv : cur_toks_) {
+    StateId state = kv.first;
+    Token *tok = kv.second;
     float final_cost = fst_.Final(state).Value();
-    float cost = tok->tot_cost, cost_with_final = cost + final_cost;
+    float cost = tok->tot_cost;
+    float cost_with_final = cost + final_cost;
     best_cost = std::min(cost, best_cost);
     best_cost_with_final = std::min(cost_with_final, best_cost_with_final);
     if (final_costs != nullptr && final_cost != infinity) {
@@ -561,7 +570,7 @@ void LatticeSimpleDecoder::ComputeFinalCosts(
 
 float LatticeSimpleDecoder::FinalRelativeCost() const {
   if (!decoding_finalized_) {
-    float relative_cost;
+    float relative_cost = 0.0f;
     ComputeFinalCosts(nullptr, &relative_cost, nullptr);
     return relative_cost;
   } else {

@@ -42,7 +42,7 @@ TEST(Eigen, Hello) {
 
   Eigen::MatrixXd m3 = std::move(m2);
   // now m2 is empty
-  EXPECT_EQ(m2.size(), 0);
+  EXPECT_EQ(m2.size(), 0);  // NOLINT -- checks moved-from state
   EXPECT_EQ(m3(0, 0), 10);
 
   double *d = &m(0, 0);
@@ -251,7 +251,8 @@ TEST(Eigen, Reduction) {
   EXPECT_EQ(m.trace(), 1 + (-5));
   EXPECT_EQ(m.trace(), m.diagonal().sum());
 
-  std::ptrdiff_t row_id, col_id;
+  std::ptrdiff_t row_id = 0;
+  std::ptrdiff_t col_id = 0;
 
   float a = m.minCoeff(&row_id, &col_id);
   EXPECT_EQ(a, -5);
@@ -295,23 +296,18 @@ TEST(Eigen, Array) {
   EXPECT_EQ(c.cols(), 1);
   EXPECT_EQ(c.size(), 10);
   static_assert(
-      std::is_same<decltype(c), Eigen::Array<float, Eigen::Dynamic, 1>>::value,
-      "");
-
-  static_assert(std::is_same<Eigen::ArrayXf,
-                             Eigen::Array<float, Eigen::Dynamic, 1>>::value,
-                "");
+      std::is_same_v<decltype(c), Eigen::Array<float, Eigen::Dynamic, 1>>);
 
   static_assert(
-      std::is_same<Eigen::ArrayXXf,
-                   Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic>>::value,
-      "");
+      std::is_same_v<Eigen::ArrayXf, Eigen::Array<float, Eigen::Dynamic, 1>>);
 
-  static_assert(std::is_same<Eigen::Array3f, Eigen::Array<float, 3, 1>>::value,
-                "");
+  static_assert(
+      std::is_same_v<Eigen::ArrayXXf,
+                     Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic>>);
 
-  static_assert(std::is_same<Eigen::Array33f, Eigen::Array<float, 3, 3>>::value,
-                "");
+  static_assert(std::is_same_v<Eigen::Array3f, Eigen::Array<float, 3, 1>>);
+
+  static_assert(std::is_same_v<Eigen::Array33f, Eigen::Array<float, 3, 3>>);
 }
 
 TEST(Eigen, ArrayMultiplication) {
@@ -431,8 +427,10 @@ TEST(Eigen, CopyRow) {
   a = Eigen::MatrixXf::Random(5, 3);
   b.resize(5, 3);
 
-  b(Eigen::seqN(0, 3), Eigen::indexing::all) = a(Eigen::seqN(0, 3), Eigen::indexing::all);
-  b(Eigen::seqN(3, 2), Eigen::indexing::all) = a(Eigen::seqN(3, 2), Eigen::indexing::all);
+  b(Eigen::seqN(0, 3), Eigen::indexing::all) =
+      a(Eigen::seqN(0, 3), Eigen::indexing::all);
+  b(Eigen::seqN(3, 2), Eigen::indexing::all) =
+      a(Eigen::seqN(3, 2), Eigen::indexing::all);
   for (int32_t i = 0; i != a.size(); ++i) {
     EXPECT_EQ(a(i), b(i));
   }

@@ -73,8 +73,8 @@ struct AlignConfig {
 /// is called from many different binaries, e.g. gmm-align, gmm-align-compiled,
 /// sgmm-align, etc.  The writers for alignments and words will only be written
 /// to if they are open.  The num_done, num_error, num_retried, tot_like and
-/// frame_count pointers will (if non-NULL) be incremented or added to, not set,
-/// by this function.
+/// frame_count pointers will (if non-nullptr) be incremented or added to, not
+/// set, by this function.
 void AlignUtteranceWrapper(
     const AlignConfig &config, const std::string &utt,
     float acoustic_scale,  // affects scores written to scores_writer, if
@@ -105,7 +105,7 @@ void ModifyGraphForCarefulAlignment(fst::VectorFst<fst::StdArc> *fst);
 /// @kfile{src/decoder/decoder-wrappers.cc}: the table writers are replaced
 /// by out-params).  As in kaldi, `alignments`/`words` come from the
 /// DECODE-TIME best path (decoder.GetBestPath), and `*like_ptr` gets its
-/// total cost.  If `lat_out` is non-NULL it receives the raw lattice exactly
+/// total cost.  If `lat_out` is non-nullptr it receives the raw lattice exactly
 /// as kaldi writes it: acoustic costs divided by `acoustic_scale` (skipped
 /// when `acoustic_scale == 0`).
 ///
@@ -124,19 +124,19 @@ bool DecodeUtteranceLatticeSimple(
     LatticeSimpleDecoder &decoder,  // NOLINT not const but is really an input.
     DecodableInterface &decodable,  // NOLINT not const but is really an input.
     const TransitionInformation &trans_model, const std::string &utt,
-    bool allow_partial, float acoustic_scale,
-    std::vector<int32_t> *alignments,
+    bool allow_partial, float acoustic_scale, std::vector<int32_t> *alignments,
     std::vector<int32_t> *words,
-    double *like_ptr,              // utterance likelihood on success.
-    fst::Lattice *lat_out = NULL);  // optional; see above.
+    double *like_ptr,                  // utterance likelihood on success.
+    fst::Lattice *lat_out = nullptr);  // optional; see above.
 
 /// @brief Decode one utterance with LatticeFasterDecoderTpl.
 ///
 /// See DecodeUtteranceLatticeSimple for the output semantics; this is
-/// kaldi's DecodeUtteranceLatticeFaster (@kfile{src/decoder/decoder-wrappers.cc})
-/// adapted the same way.  Caution: this will only link correctly for the FST
-/// types explicitly instantiated in the .cc file: fst::Fst<fst::StdArc>,
-/// fst::VectorFst<fst::StdArc> and fst::ConstFst<fst::StdArc>.
+/// kaldi's DecodeUtteranceLatticeFaster
+/// (@kfile{src/decoder/decoder-wrappers.cc}) adapted the same way.  Caution:
+/// this will only link correctly for the FST types explicitly instantiated in
+/// the .cc file: fst::Fst<fst::StdArc>, fst::VectorFst<fst::StdArc> and
+/// fst::ConstFst<fst::StdArc>.
 ///
 /// @param [in] decoder        Decoded (or to-be-decoded) decoder.
 /// @param [in] decodable      Scores.
@@ -155,11 +155,10 @@ bool DecodeUtteranceLatticeFaster(
         &decoder,                   // NOLINT not const but is really an input.
     DecodableInterface &decodable,  // NOLINT not const but is really an input.
     const TransitionInformation &trans_model, const std::string &utt,
-    bool allow_partial, float acoustic_scale,
-    std::vector<int32_t> *alignments,
+    bool allow_partial, float acoustic_scale, std::vector<int32_t> *alignments,
     std::vector<int32_t> *words,
-    double *like_ptr,              // utterance likelihood on success.
-    fst::Lattice *lat_out = NULL);  // optional; see above.
+    double *like_ptr,                  // utterance likelihood on success.
+    fst::Lattice *lat_out = nullptr);  // optional; see above.
 
 /// @brief 1-best of a lattice under lm/acoustic scaling.
 ///
