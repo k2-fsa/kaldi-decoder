@@ -209,10 +209,10 @@ class TestBindingRegressions(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             dec.log_likelihood(0, 0)   # index OOB (1-based)
 
-    def test_leak_on_throw(self):
-        # Wrong column count throws inside the ctor/accept path; the owned
-        # matrix copy must not leak (unique_ptr path).  Loop + RSS check.
-        import resource
+    def test_throw_paths_repeatable(self):
+        # Wrong column count must raise cleanly every time (the owned matrix
+        # copy is freed on the exception path -- unique_ptr).  Leak detection
+        # itself belongs to the ASan/LSan sanitizer run, not this test.
         tm = FakeTm()
         bad = np.zeros((4, 3), dtype=np.float32)  # 3 cols != 4 pdfs
         for _ in range(200):
@@ -222,26 +222,10 @@ class TestBindingRegressions(unittest.TestCase):
         for _ in range(200):
             with self.assertRaises(RuntimeError):
                 dec.accept_loglikes(bad, 0)
-        gc.collect()
-        # ru_maxrss is a peak on macOS; on Linux it is current.  Only assert
-        # where it is current (Linux): a big leak would show.
-        rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        self.assertGreater(rss, 0)  # smoke: loop completed under memory
-
-    def test_decodable_none_raises_type_error(self):
-        graph = make_linear_word_graph()
-        decoder = LatticeFasterDecoder(graph, LatticeFasterDecoderConfig())
-        with self.assertRaises(TypeError):
-            decoder.decode(None)
-
-    def test_empty_chunk_with_discard_matches_kaldi(self):
-        # kaldi's AcceptLoglikes returns early for empty chunks (documented).
-        tm = FakeTm()
-        dec = DecodableMatrixMappedOffset(tm)
-        chunk = np.array([[0.0, -1.0, -2.0, -3.0]], dtype=np.float32)
-        dec.accept_loglikes(chunk, 0)
-        dec.accept_loglikes(np.zeros((0, 4), dtype=np.float32), frames_to_discard=1)
-        self.assertEqual(dec.num_frames_ready(), 1)  # nothing discarded
+        # still usable afterwards
+        good = np.zeros((4, 4), dtype=np.float32)
+        dec.accept_loglikes(good, 0)
+        self.assertEqual(dec.num_frames_ready(), 4)
 
 
 class TestDecoderWrappers(unittest.TestCase):

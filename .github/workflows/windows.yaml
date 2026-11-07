@@ -28,6 +28,17 @@ jobs:
       matrix:
         os: [windows-latest, windows-11-arm]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+        # numpy 1.x/2.x are both supported; the main matrix runs 2.x and
+        # the include below adds one 1.x cell per OS (numpy<2 has no
+        # wheels for Python >= 3.13, hence 3.12).
+        numpy: ["2"]
+        include:
+          - os: windows-latest
+            python-version: "3.12"
+            numpy: "1"
+          - os: windows-11-arm
+            python-version: "3.12"
+            numpy: "1"
         exclude:
           # Windows on ARM only ships CPython 3.11+ (same as
           # ../kaldi-native-fbank's build-wheels-win-arm64.yaml), so there
@@ -60,7 +71,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install -U pip
-          python3 -m pip install kaldifst numpy
+          python3 -m pip install "kaldifst>=1.9.0" "numpy~=${{ matrix.numpy }}.0"
 
       - name: Configure CMake
         shell: bash
