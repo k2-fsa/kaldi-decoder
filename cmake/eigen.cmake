@@ -1,25 +1,32 @@
+include_guard(GLOBAL)
+
 function(download_eigen)
+  # Already provided by a parent project (e.g. kaldi-hmm-gmm's ./cmake).
+  if(TARGET Eigen3::Eigen)
+    return()
+  endif()
+
   include(FetchContent)
 
-  set(eigen_URL  "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz")
-  set(eigen_URL2 "https://huggingface.co/csukuangfj/kaldi-hmm-gmm-cmake-deps/resolve/main/eigen-3.4.0.tar.gz")
-  set(eigen_HASH "SHA256=8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72")
+  # NOTE: keep in sync with kaldi-hmm-gmm/cmake/eigen.cmake (5.0.1) so a
+  # process never carries two Eigen versions.
+  set(eigen_URL  "https://gitlab.com/libeigen/eigen/-/archive/5.0.1/eigen-5.0.1.tar.gz")
+  set(eigen_HASH "SHA256=e9c326dc8c05cd1e044c71f30f1b2e34a6161a3b6ecf445d56b53ff1669e3dec")
 
   # If you don't have access to the Internet,
   # please pre-download eigen
   set(possible_file_locations
-    $ENV{HOME}/Downloads/eigen-3.4.0.tar.gz
-    ${CMAKE_SOURCE_DIR}/eigen-3.4.0.tar.gz
-    ${CMAKE_BINARY_DIR}/eigen-3.4.0.tar.gz
-    /tmp/eigen-3.4.0.tar.gz
-    /star-fj/fangjun/download/github/eigen-3.4.0.tar.gz
+    $ENV{HOME}/Downloads/eigen-5.0.1.tar.gz
+    ${CMAKE_SOURCE_DIR}/eigen-5.0.1.tar.gz
+    ${CMAKE_BINARY_DIR}/eigen-5.0.1.tar.gz
+    /tmp/eigen-5.0.1.tar.gz
+    /star-fj/fangjun/download/github/eigen-5.0.1.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
       set(eigen_URL  "${f}")
       file(TO_CMAKE_PATH "${eigen_URL}" eigen_URL)
-      set(eigen_URL2)
       break()
     endif()
   endforeach()
@@ -27,21 +34,15 @@ function(download_eigen)
   set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
   set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
 
+  message(STATUS "Downloading eigen ${eigen_URL}")
   FetchContent_Declare(eigen
+    EXCLUDE_FROM_ALL
     URL               ${eigen_URL}
     URL_HASH          ${eigen_HASH}
   )
-
-  FetchContent_GetProperties(eigen)
-  if(NOT eigen_POPULATED)
-    message(STATUS "Downloading eigen ${eigen_URL}")
-    FetchContent_Populate(eigen)
-  endif()
+  FetchContent_MakeAvailable(eigen)
   message(STATUS "eigen is downloaded to ${eigen_SOURCE_DIR}")
   message(STATUS "eigen's binary dir is ${eigen_BINARY_DIR}")
-
-
-  add_subdirectory(${eigen_SOURCE_DIR} ${eigen_BINARY_DIR} EXCLUDE_FROM_ALL)
 endfunction()
 
 download_eigen()

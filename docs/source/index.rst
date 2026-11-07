@@ -21,6 +21,24 @@ without depending on `Kaldi`_.
 
    ./python_api/index
 
+.. toctree::
+   :maxdepth: 2
+   :caption: C++ API
+
+   ./cpp-api/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Usage
+
+   ./usage/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Design
+
+   ./design/index
+
 Indices and tables
 ==================
 

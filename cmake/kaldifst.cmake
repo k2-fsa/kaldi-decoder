@@ -1,17 +1,27 @@
+include_guard(GLOBAL)
+
 function(download_kaldifst)
+  # Already provided by a parent project (e.g. kaldi-hmm-gmm's ./cmake).
+  if(TARGET kaldifst_core)
+    return()
+  endif()
+
   include(FetchContent)
 
-  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.8.3.tar.gz")
-  set(kaldifst_HASH "SHA256=3c0d7e43575f27282f67b94e12af6bdf481f5f1544cb6db711ac8919ca14995e")
+  # NOTE: keep in sync with kaldi-hmm-gmm/cmake/kaldifst.cmake and the pip
+  # requirement `kaldifst>=1.9.0`; v1.9.0+ provides the zero-copy interop
+  # helpers (_vector_fst_addr/_borrow/_take) used by the python bindings.
+  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.9.0.tar.gz")
+  set(kaldifst_HASH "SHA256=225d8377d1d262e3aedab23558fead106b4cbc83462fb29f1c5e7d9e3b0c14dd")
 
   # If you don't have access to the Internet,
   # please pre-download kaldifst
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldifst-1.8.3.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldifst-1.8.3.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldifst-1.8.3.tar.gz
-    /tmp/kaldifst-1.8.3.tar.gz
-    /star-fj/fangjun/download/github/kaldifst-1.8.3.tar.gz
+    $ENV{HOME}/Downloads/kaldifst-1.9.0.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldifst-1.9.0.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldifst-1.9.0.tar.gz
+    /tmp/kaldifst-1.9.0.tar.gz
+    /star-fj/fangjun/download/github/kaldifst-1.9.0.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)

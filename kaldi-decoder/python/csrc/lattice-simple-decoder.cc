@@ -5,13 +5,19 @@
 #include "kaldi-decoder/python/csrc/lattice-simple-decoder.h"
 
 #include "kaldi-decoder/csrc/lattice-simple-decoder.h"
+#include "kaldi-decoder/python/csrc/fst-caster.h"
 
 namespace kaldi_decoder {
 
 static void PybindLatticeSimpleDecoderConfig(py::module *m) {
   using PyClass = LatticeSimpleDecoderConfig;
 
-  py::class_<PyClass>(*m, "LatticeSimpleDecoderConfig")
+  auto cls = py::class_<PyClass>(
+      *m, "LatticeSimpleDecoderConfig",
+      R"doc(Options for :class:`LatticeSimpleDecoder` (kaldi's
+`LatticeSimpleDecoderConfig
+<https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/lattice-simple-decoder.h>`_).
+All fields writable; defaults match kaldi's.)doc")
       .def(py::init<float, float, int32_t, bool, bool, float, float>(),
            py::arg("beam") = 16.0, py::arg("lattice_beam") = 10.0,
            py::arg("prune_interval") = 25,
@@ -32,22 +38,46 @@ void PybindLatticeSimpleDecoder(py::module *m) {
   PybindLatticeSimpleDecoderConfig(m);
 
   using PyClass = LatticeSimpleDecoder;
-  py::class_<PyClass>(*m, "LatticeSimpleDecoder")
+  auto cls = py::class_<PyClass>(
+      *m, "LatticeSimpleDecoder",
+      R"doc(Lattice-generating Viterbi decoder (kaldi's `LatticeSimpleDecoder
+<https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/lattice-simple-decoder.h>`_).
+
+Like :class:`SimpleDecoder` but keeps alternative paths within
+``lattice_beam`` as a lattice.  See :meth:`get_raw_lattice`.
+
+**Lifetime:** the decoder holds a reference to the graph (py::keep_alive); the graph is released automatically when the decoder is destroyed.  The decodable is only needed during the decode calls.)doc")
       .def(py::init<const fst::Fst<fst::StdArc> &,
                     const LatticeSimpleDecoderConfig &>(),
-           py::arg("fst"), py::arg("config"))
+           py::arg("fst"), py::arg("config"),
+           py::keep_alive<1, 2>())
       .def(py::init<const fst::VectorFst<fst::StdArc> &,
                     const LatticeSimpleDecoderConfig &>(),
-           py::arg("fst"), py::arg("config"))
+           py::arg("fst"), py::arg("config"),
+           py::keep_alive<1, 2>())
       .def(py::init<const fst::ConstFst<fst::StdArc> &,
                     const LatticeSimpleDecoderConfig &>(),
-           py::arg("fst"), py::arg("config"))
-      .def("get_config", &PyClass::GetOptions)
+           py::arg("fst"), py::arg("config"),
+           py::keep_alive<1, 2>())
+      .def("get_config", &PyClass::GetOptions,
+           R"doc(Return the current config.)doc")
       .def("num_frames_decoded", &PyClass::NumFramesDecoded)
-      .def("final_relative_cost", &PyClass::FinalRelativeCost)
-      .def("decode", &PyClass::Decode, py::arg("decodable"))
-      .def("init_decoding", &PyClass::InitDecoding)
-      .def("finalize_decoding", &PyClass::FinalizeDecoding)
+      .def("reached_final", &PyClass::ReachedFinal,
+           R"doc(True if a final state was active on the last frame.)doc")
+      .def("final_relative_cost", &PyClass::FinalRelativeCost,
+           R"doc(Difference between best final and best last-frame cost;
+``inf`` means no final state reached.)doc")
+      .def("decode",
+           [](PyClass &self, DecodableInterface &decodable) -> bool {
+             return self.Decode(&decodable);
+           },
+           py::arg("decodable"),
+           R"doc(Decode to the end of the decodable's frames.)doc")
+      .def("init_decoding", &PyClass::InitDecoding,
+           R"doc(Reset for a new utterance.)doc")
+      .def("finalize_decoding", &PyClass::FinalizeDecoding,
+           R"doc(Final pruning of forward links; improves raw-lattice
+accuracy toward the end of the utterance.)doc")
       .def(
           "get_best_path",
           [](PyClass &self, bool use_final_probs)

@@ -19,22 +19,34 @@
 #include "kaldi-decoder/csrc/hash-list.h"
 #include "kaldifst/csrc/lattice-weight.h"
 
+/**
+   @file faster-decoder.h
+   @brief Beam-pruned Viterbi decoder (kaldi's FasterDecoder).
+
+   This file is copied/modified from @kfile{src/decoder/faster-decoder.h}.  The fastest decoder; for FSTs without self-loops and without the need for a lattice.  Use LatticeFasterDecoderTpl for general HMM graphs.
+
+   @see LatticeFasterDecoderTpl, DecodableInterface.
+*/
+
 namespace kaldi_decoder {
 
 struct FasterDecoderOptions {
-  // Decoding beam.  Larger->slower, more accurate.
+  /// Decoding beam.  Larger -> slower, more accurate (kaldi @c beam).
   float beam;
 
-  // Decoder max active states.  Larger->slower; more accurate
+  /// Decoder max active states.  Larger -> slower; more accurate
+  /// (kaldi @c max_active).
   int32_t max_active;
 
-  // Decoder min active states (don't prune if #active less than this).
+  /// Decoder min active states (don't prune if #active less than this;
+  /// kaldi @c min_active).
   int32_t min_active;
 
-  // Increment used in decoder [obscure setting]
+  /// Increment used in decoder [obscure setting] (kaldi @c beam_delta).
   float beam_delta;
 
-  // Setting used in decoder to control hash behavior
+  /// Setting used in decoder to control hash behavior
+  /// (kaldi @c hash_ratio).
   float hash_ratio;
 
   /*implicit*/ FasterDecoderOptions(
@@ -62,6 +74,25 @@ struct FasterDecoderOptions {
   }
 };
 
+/// @brief Beam-pruned Viterbi decoder (kaldi's FasterDecoder).
+///
+/// This is kaldi's @kfile{src/decoder/faster-decoder.h}: the fastest
+/// decoder; for FSTs without self-loops and without lattice output.  For
+/// general HMM graphs use LatticeFasterDecoderTpl.
+///
+/// @code
+///   kaldi_decoder::FasterDecoderOptions opts;  // beam=16, ...
+///   kaldi_decoder::FasterDecoder decoder(graph, opts);
+///   decoder.InitDecoding();
+///   decoder.AdvanceDecoding(&decodable);
+///   fst::Lattice best;
+///   decoder.GetBestPath(&best);
+/// @endcode
+///
+/// @par Used by:
+/// Fast 1-best decoding and alignment retries.
+///
+/// @see FasterDecoderOptions, LatticeFasterDecoderTpl, DecodableInterface
 class FasterDecoder {
  public:
   typedef fst::StdArc Arc;
@@ -69,41 +100,65 @@ class FasterDecoder {
   typedef Arc::StateId StateId;
   typedef Arc::Weight Weight;
 
+  /// @brief Construct the decoder.
+  /// @param [in] fst     Decoding graph; NOT owned -- must outlive the
+  ///                     decoder.
+  /// @param [in] config  Beams and limits.
+  /// @see Decode, GetBestPath
   FasterDecoder(const fst::Fst<fst::StdArc> &fst,
                 const FasterDecoderOptions &config);
 
   FasterDecoder(const FasterDecoder &) = delete;
   FasterDecoder &operator=(const FasterDecoder &) = delete;
 
+  /// @brief Replace the configuration (between utterances).
+  /// @param [in] config  New beams and limits.
   void SetOptions(const FasterDecoderOptions &config) { config_ = config; }
 
+  /// Destructor; frees the internal tokens (not the graph).
   ~FasterDecoder() { ClearToks(toks_.Clear()); }
 
+  /// @brief Decode to the end of the decodable's frames.
+  /// @param [in] decodable  Scores; must outlive the decode.
+  /// @see InitDecoding, AdvanceDecoding
   void Decode(DecodableInterface *decodable);
 
-  /// Returns true if a final state was active on the last frame.
+  /// @brief Whether a final state was active on the last frame.
+  /// @return True if a final state was reached.
+  /// @see GetBestPath
   bool ReachedFinal() const;
 
-  /// GetBestPath gets the decoding traceback. If "use_final_probs" is true
-  /// AND we reached a final state, it limits itself to final states;
-  /// otherwise it gets the most likely token not taking into account
-  /// final-probs. Returns true if the output best path was not the empty
-  /// FST (will only return false in unusual circumstances where
-  /// no tokens survived).
+  /// @brief Get the decoding traceback.
+  ///
+  /// If @c use_final_probs is true AND we reached a final state, it limits
+  /// itself to final states; otherwise it gets the most likely token without
+  /// final-probs.  Returns true if the output best path was not the empty FST
+  /// (false only in unusual circumstances where no tokens survived).
+  ///
+  /// @param [out] fst_out         The best path (a linear Lattice FST).
+  /// @param [in]  use_final_probs Account for final-probs (default true).
+  /// @return True on success.
+  /// @see ReachedFinal, Decode
   bool GetBestPath(fst::MutableFst<fst::LatticeArc> *fst_out,
                    bool use_final_probs = true);
 
-  /// As a new alternative to Decode(), you can call InitDecoding
-  /// and then (possibly multiple times) AdvanceDecoding().
+  /// @brief Reset for a new utterance.
+  /// As an alternative to Decode(), call InitDecoding() and then (possibly
+  /// multiple times) AdvanceDecoding().
+  /// @see AdvanceDecoding, Decode
   void InitDecoding();
 
-  /// This will decode until there are no more frames ready in the decodable
-  /// object, but if max_num_frames is >= 0 it will decode no more than
-  /// that many frames.
+  /// @brief Decode up to @c max_num_frames more frames.
+  /// Decodes until there are no more frames ready in the decodable object;
+  /// if @c max_num_frames >= 0 it decodes no more than that many frames.
+  /// @param [in] decodable       Scores; must outlive the decode.
+  /// @param [in] max_num_frames  Frame limit, or -1 for no limit.
+  /// @see InitDecoding, NumFramesDecoded
   void AdvanceDecoding(DecodableInterface *decodable,
                        int32_t max_num_frames = -1);
 
-  /// Returns the number of frames already decoded.
+  /// @return The number of frames already decoded.
+  /// @see AdvanceDecoding
   int32_t NumFramesDecoded() const { return num_frames_decoded_; }
 
  protected:

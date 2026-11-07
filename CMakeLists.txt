@@ -1,5 +1,26 @@
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "4.0.0")
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+# Let normal variables shadow option() in dependency subprojects (e.g. the
+# BUILD_SHARED_LIBS dance in cmake/kaldifst.cmake).
+if(POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW)
+endif()
+# cmake/kaldifst.cmake calls FetchContent_Populate directly (it must set
+# CMAKE_MODULE_PATH between populate and add_subdirectory); allow it without
+# the CMP0169 deprecation warning.  CMAKE_POLICY_DEFAULT_CMP0169 covers the
+# same pattern inside fetched subprojects (kaldifst's cmake/openfst.cmake),
+# whose own cmake_minimum_required() would reset the policy to WARN.
+if(POLICY CMP0169)
+  cmake_policy(SET CMP0169 OLD)
+endif()
+set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
 project(kaldi-decoder)
+
+# Dependency builds still use old cmake_minimum_required / cmake_policy
+# forms; silence their deprecation warnings (same as ../kaldi-hmm-gmm).
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
 # Disable warning about
 #
@@ -34,6 +55,13 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+
+# For clangd/IDE tooling (same as ../kaldi-native-fbank).  Only when
+# kaldi-decoder is the TOP-LEVEL project: as a subproject (kaldi-hmm-gmm,
+# sherpa-onnx) the parent owns the build tree's setting — never override it.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "" FORCE)
+endif()
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ version to be used.")
@@ -78,3 +106,5 @@ endif()
 message(STATUS "PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}")
 
 add_subdirectory(kaldi-decoder)
+
+message(STATUS "CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS}")

@@ -3,6 +3,8 @@ include_directories(${CMAKE_SOURCE_DIR})
 # Please keep the source files alphabetically sorted
 set(srcs
   decodable-ctc.cc
+  decodable-matrix.cc
+  decoder-wrappers.cc
   eigen.cc
   faster-decoder.cc
   lattice-faster-decoder.cc
@@ -27,8 +29,15 @@ target_link_libraries(kaldi-decoder-core PUBLIC Eigen3::Eigen)
 
 if(KALDI_DECODER_ENABLE_TESTS)
   set(test_srcs
+    api-coverage-test.cc
+    decodable-matrix-test.cc
+    decoder-wrappers-test.cc
     eigen-test.cc
+    faster-decoder-test.cc
     hash-list-test.cc
+    lattice-faster-decoder-test.cc
+    lattice-simple-decoder-test.cc
+    simple-decoder-test.cc
   )
 
   function(kaldi_decoder_add_test source)
@@ -37,7 +46,6 @@ if(KALDI_DECODER_ENABLE_TESTS)
     add_executable(${target_name} ${source})
     target_link_libraries(${target_name}
       PRIVATE
-      gtest
       gtest_main
       kaldi-decoder-core
     )

@@ -11,6 +11,7 @@
 #define KALDI_DECODER_CSRC_LATTICE_SIMPLE_DECODER_H_
 #include <string>
 #include <unordered_map>
+#include <limits>
 #include <vector>
 
 #include "fst/fst.h"
@@ -18,6 +19,15 @@
 #include "kaldi-decoder/csrc/decodable-itf.h"
 #include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/lattice-weight.h"
+
+/**
+   @file lattice-simple-decoder.h
+   @brief Lattice-generating Viterbi decoder (kaldi's LatticeSimpleDecoder).
+
+   This file is copied/modified from @kfile{src/decoder/lattice-simple-decoder.h}.  Like SimpleDecoder but keeps near-best alternative paths (within lattice_beam) as a lattice via per-token forward links.
+
+   @see LatticeFasterDecoderTpl, DecodableInterface.
+*/
 
 namespace kaldi_decoder {
 
@@ -84,7 +94,7 @@ struct LatticeSimpleDecoderConfig {
 };
 
 /** Simplest possible decoder, included largely for didactic purposes and as a
-    means to debug more highly optimized decoders.  See \ref decoders_simple
+    means to debug more highly optimized decoders.  See kaldi's doc/decoders.dox
     for more information.
  */
 class LatticeSimpleDecoder {
@@ -105,6 +115,8 @@ class LatticeSimpleDecoder {
   /// intend to call AdvanceDecoding().  If you call Decode(), you don't need
   /// to call this.  You can call InitDecoding if you have already decoded an
   /// utterance and want to start with a new utterance.
+  /// @brief Reset for a new utterance.
+  /// @see Decode, AdvanceDecoding
   void InitDecoding();
 
   /// This function may be optionally called after AdvanceDecoding(), when you
@@ -127,6 +139,11 @@ class LatticeSimpleDecoder {
   // If "use_final_probs" is true AND we reached the final-state
   // of the graph then it will include those as final-probs, else
   // it will treat all final-probs as one.
+  /// @brief 1-best traceback as a linear Lattice FST.
+  /// @param [out] lat             The best path.
+  /// @param [in]  use_final_probs Account for final-probs (default true).
+  /// @return True if the output lattice was nonempty.
+  /// @see GetRawLattice, ReachedFinal
   bool GetBestPath(fst::Lattice *lat, bool use_final_probs = true) const;
 
   // Outputs an FST corresponding to the raw, state-level
@@ -135,9 +152,26 @@ class LatticeSimpleDecoder {
   // If "use_final_probs" is true AND we reached the final-state
   // of the graph then it will include those as final-probs, else
   // it will treat all final-probs as one.
+  /// @brief The raw, state-level traceback lattice.
+  ///
+  /// Contains the alternative paths retained within @c lattice_beam;
+  /// graph costs in Value1, acoustic costs in Value2.
+  /// @param [out] lat             The raw lattice (topologically sorted).
+  /// @param [in]  use_final_probs Account for final-probs (default true).
+  /// @return True if the output lattice was nonempty.
+  /// @see GetBestPath
   bool GetRawLattice(fst::Lattice *lat, bool use_final_probs = true) const;
 
+  /// Destructor; frees the internal tokens (not the graph).
   ~LatticeSimpleDecoder() { ClearActiveTokens(); }
+
+  /// Returns true if a token reached a final state on the final frame, i.e.
+  /// a complete path through the graph exists (this is kaldi's
+  /// LatticeSimpleDecoder::ReachedFinal(); it checks whether
+  /// FinalRelativeCost() is finite).
+  bool ReachedFinal() const {
+    return FinalRelativeCost() != std::numeric_limits<float>::infinity();
+  }
 
   /// FinalRelativeCost() serves the same purpose as ReachedFinal(), but gives
   /// more information.  It returns the difference between the best (final-cost
@@ -149,12 +183,18 @@ class LatticeSimpleDecoder {
   /// reasonable likelihood.
   float FinalRelativeCost() const;
 
+  /// @return The current configuration.
   const LatticeSimpleDecoderConfig &GetOptions() const { return config_; }
 
+  /// @return The number of frames already decoded.
   int32_t NumFramesDecoded() const { return active_toks_.size() - 1; }
 
   // Returns true if any kind of traceback is available (not necessarily from
   // a final state).
+  /// @brief Decode to the end of the decodable's frames.
+  /// @param [in] decodable  Scores; must outlive the decode.
+  /// @return True if any traceback is available.
+  /// @see GetBestPath, GetRawLattice
   bool Decode(DecodableInterface *decodable);
 
  private:

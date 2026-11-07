@@ -3,10 +3,14 @@ include_directories(${PROJECT_SOURCE_DIR})
 set(srcs
   decodable-ctc.cc
   decodable-itf.cc
+  decodable-matrix.cc
+  decoder-wrappers.cc
   faster-decoder.cc
   kaldi-decoder.cc
+  lattice-faster-decoder.cc
   lattice-simple-decoder.cc
   simple-decoder.cc
+  transition-information.cc
 )
 
 pybind11_add_module(_kaldi_decoder ${srcs})

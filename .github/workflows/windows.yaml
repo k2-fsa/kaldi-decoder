@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, windows-11-arm]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
 
     steps:
@@ -43,6 +43,12 @@ jobs:
 
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install -U pip
+          python3 -m pip install kaldifst numpy
 
       - name: Configure CMake
         shell: bash
