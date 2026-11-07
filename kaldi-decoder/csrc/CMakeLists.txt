@@ -1,4 +1,6 @@
-include_directories(${CMAKE_SOURCE_DIR})
+# PROJECT_SOURCE_DIR (not CMAKE_SOURCE_DIR): correct both standalone
+# and when built as a subproject (e.g. inside kaldi-hmm-gmm).
+include_directories(${PROJECT_SOURCE_DIR})
 
 # Please keep the source files alphabetically sorted
 set(srcs

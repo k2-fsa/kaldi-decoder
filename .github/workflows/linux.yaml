@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - master
+      - port-decoder
   pull_request:
     branches:
       - master
+      - port-decoder
 
   workflow_dispatch:
 
@@ -32,6 +34,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.24
+        with:
+          key: ${{ matrix.os }}-${{ matrix.python-version }}
+
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v7
         with:
@@ -49,6 +56,8 @@ jobs:
       - name: Configure CMake
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           mkdir build
           cd build
           cmake -D CMAKE_BUILD_TYPE=Release -DKALDI_DECODER_ENABLE_TESTS=ON ..

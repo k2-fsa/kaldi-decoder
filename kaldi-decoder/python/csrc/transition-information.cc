@@ -110,6 +110,9 @@ interchangeable in alignments.)doc")
 transition.)doc")
       .def("is_self_loop", &PyClass::IsSelfLoop, py::arg("trans_id"),
            R"doc(Whether ``trans_id`` is a self-loop transition.)doc")
+      .def("transition_id_to_pdf", &PyClass::TransitionIdToPdf,
+           py::arg("trans_id"),
+           R"doc(Pdf of one transition-id (index into the tid->pdf map).)doc")
       .def("transition_id_to_pdf_array", &PyClass::TransitionIdToPdfArray,
            R"doc(The whole tid->pdf map: index 0 unused, transition-ids are
 1-based.)doc")
