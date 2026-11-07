@@ -61,7 +61,7 @@ struct type_caster<fst::VectorFst<fst::StdArc>> {
       pybind11::gil_scoped_acquire gil;  // safe if already held
       uint64_t addr =
           kd_kaldifst_module().attr("_vector_fst_addr")(src).cast<uint64_t>();
-      // NOLINTNEXTLINE(performance-no-int-to-ptr) -- pointer bridge by design
+      // NOLINTNEXTLINE -- performance-no-int-to-ptr: pointer bridge by design
       held_ = reinterpret_cast<fst::VectorFst<fst::StdArc> *>(addr);
       return held_ != nullptr;
     } catch (const std::exception &) {
@@ -126,7 +126,7 @@ struct type_caster<fst::Fst<fst::StdArc>> {
       pybind11::gil_scoped_acquire gil;  // safe if already held
       uint64_t addr =
           kd_kaldifst_module().attr("_vector_fst_addr")(src).cast<uint64_t>();
-      // NOLINTNEXTLINE(performance-no-int-to-ptr) -- pointer bridge by design
+      // NOLINTNEXTLINE -- performance-no-int-to-ptr: pointer bridge by design
       held_ = reinterpret_cast<fst::VectorFst<fst::StdArc> *>(addr);
       return held_ != nullptr;
     } catch (const std::exception &) {

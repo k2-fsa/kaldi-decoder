@@ -376,7 +376,7 @@ void LatticeFasterDecoderTpl<FST, Token>::PruneForwardLinks(
           link = link->next;
         }
       }  // for all outgoing links
-      if (fabs(tok_extra_cost - tok->extra_cost) > delta)
+      if (std::fabs(tok_extra_cost - tok->extra_cost) > delta)
         changed = true;  // difference new minus old is bigger than delta
       tok->extra_cost = tok_extra_cost;
       // will be +infinity or <= lattice_beam_.
@@ -746,7 +746,7 @@ float LatticeFasterDecoderTpl<FST, Token>::GetCutoff(Elem *list_head,
 template <typename FST, typename Token>
 float LatticeFasterDecoderTpl<FST, Token>::ProcessEmitting(
     DecodableInterface *decodable) {
-  KALDI_DECODER_ASSERT(active_toks_.size() > 0);
+  KALDI_DECODER_ASSERT(!active_toks_.empty());
   int32 frame =
       active_toks_.size() - 1;  // frame is the frame-index
                                 // (zero-based) used to get likelihoods

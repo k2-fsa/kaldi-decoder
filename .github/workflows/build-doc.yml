@@ -22,7 +22,6 @@ on:
   push:
     branches:
       - master
-      - port-decoder
       - doc
 
   workflow_dispatch:

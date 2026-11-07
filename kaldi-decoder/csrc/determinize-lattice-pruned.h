@@ -109,7 +109,7 @@ struct DeterminizeLatticePhonePrunedOptions {
 
   // Used as a default argument (= T()); explicit would break the
   // copy-initialization there.
-  // NOLINTNEXTLINE(cppcoreguidelines-explicit-constructor,misc-explicit-constructor)
+  // NOLINTNEXTLINE -- implicit ctor on purpose; see comment above
   DeterminizeLatticePhonePrunedOptions(float delta = fst::kDelta,
                                        int32_t max_mem = 50000000,
                                        bool phone_determinize = true,

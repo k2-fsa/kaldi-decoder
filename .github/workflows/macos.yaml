@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - master
-      - port-decoder
   pull_request:
     branches:
       - master
-      - port-decoder
 
   workflow_dispatch:
 

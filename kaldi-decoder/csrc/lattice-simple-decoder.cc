@@ -290,7 +290,7 @@ void LatticeSimpleDecoder::PruneForwardLinks(int32_t frame,
           link = link->next;
         }
       }
-      if (fabs(tok_extra_cost - tok->extra_cost) > delta) {
+      if (std::fabs(tok_extra_cost - tok->extra_cost) > delta) {
         changed = true;
       }
 
