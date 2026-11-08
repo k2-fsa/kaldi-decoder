@@ -7,12 +7,12 @@
 #ifndef KALDI_DECODER_CSRC_SIMPLE_DECODER_H_
 #define KALDI_DECODER_CSRC_SIMPLE_DECODER_H_
 
+#include <stdexcept>
 #include <unordered_map>
 
 #include "fst/fst.h"
 #include "fst/fstlib.h"
 #include "kaldi-decoder/csrc/decodable-itf.h"
-#include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/lattice-weight.h"
 
 /**
@@ -153,7 +153,9 @@ class SimpleDecoder {
           tok = prev;
         }
       }
-      KALDI_DECODER_ASSERT(tok->ref_count_ > 0);
+      if (tok->ref_count_ <= 0) {
+        throw std::runtime_error("SimpleDecoder::TokenDelete: ref_count_ <= 0");
+      }
     }
   };
 

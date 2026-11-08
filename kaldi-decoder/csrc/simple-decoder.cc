@@ -8,10 +8,11 @@
 
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
-#include "kaldi-decoder/csrc/log.h"
+#include "kaldi-decoder/csrc/macros.h"
 #include "kaldifst/csrc/remove-eps-local.h"
 
 namespace kaldi_decoder {
@@ -33,7 +34,9 @@ void SimpleDecoder::InitDecoding() {
   ClearToks(prev_toks_);
   // initialize decoding:
   StateId start_state = fst_.Start();
-  KALDI_DECODER_ASSERT(start_state != fst::kNoStateId);
+  if (start_state == fst::kNoStateId) {
+    throw std::runtime_error("SimpleDecoder::InitDecoding: FST has no start");
+  }
   StdArc dummy_arc(0, 0, StdWeight::One(), start_state);
   cur_toks_[start_state] = new Token(dummy_arc, 0.0, nullptr);
   num_frames_decoded_ = 0;
@@ -42,14 +45,19 @@ void SimpleDecoder::InitDecoding() {
 
 void SimpleDecoder::AdvanceDecoding(DecodableInterface *decodable,
                                     int32_t max_num_frames /*= -1*/) {
-  KALDI_DECODER_ASSERT(num_frames_decoded_ >= 0 &&
-                       "You must call InitDecoding() before AdvanceDecoding()");
+  if (num_frames_decoded_ < 0) {
+    throw std::runtime_error(
+        "SimpleDecoder::AdvanceDecoding: call InitDecoding() first");
+  }
   int32_t num_frames_ready = decodable->NumFramesReady();
   // num_frames_ready must be >= num_frames_decoded, or else
   // the number of frames ready must have decreased (which doesn't
   // make sense) or the decodable object changed between calls
   // (which isn't allowed).
-  KALDI_DECODER_ASSERT(num_frames_ready >= num_frames_decoded_);
+  if (num_frames_ready < num_frames_decoded_) {
+    throw std::runtime_error(
+        "SimpleDecoder::AdvanceDecoding: num_frames_ready decreased");
+  }
   int32_t target_frames_decoded = num_frames_ready;
   if (max_num_frames >= 0) {
     target_frames_decoded =
@@ -93,7 +101,7 @@ float SimpleDecoder::FinalRelativeCost() const {
   float extra_cost = best_cost_with_final - best_cost;
   if (extra_cost != extra_cost) {  // NaN.  This shouldn't happen; it indicates
                                    // some kind of error, most likely.
-    KALDI_DECODER_WARN << "Found NaN (likely search failure in decoding)";
+    KALDI_DECODER_LOGE("Found NaN (likely search failure in decoding)");
     return infinity;
   }
   // Note: extra_cost will be infinity if no states were final.
@@ -129,7 +137,9 @@ bool SimpleDecoder::GetBestPath(fst::Lattice *fst_out,
   std::vector<fst::LatticeArc> arcs_reverse;  // arcs in reverse order.
   for (Token *tok = best_tok; tok != nullptr; tok = tok->prev_)
     arcs_reverse.push_back(tok->arc_);
-  KALDI_DECODER_ASSERT(arcs_reverse.back().nextstate == fst_.Start());
+  if (arcs_reverse.back().nextstate != fst_.Start()) {
+    throw std::runtime_error("SimpleDecoder::GetBestPath: bad traceback");
+  }
   arcs_reverse.pop_back();  // that was a "fake" token... gives no info.
 
   StateId cur_state = fst_out->AddState();
@@ -158,7 +168,9 @@ void SimpleDecoder::ProcessEmitting(DecodableInterface *decodable) {
   for (const auto &kv : prev_toks_) {
     StateId state = kv.first;
     Token *tok = kv.second;
-    KALDI_DECODER_ASSERT(state == tok->arc_.nextstate);
+    if (state != tok->arc_.nextstate) {
+      throw std::runtime_error("SimpleDecoder::ProcessEmitting: bad token");
+    }
     for (fst::ArcIterator<fst::Fst<StdArc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
       const StdArc &arc = aiter.Value();
@@ -211,7 +223,9 @@ void SimpleDecoder::ProcessNonemitting() {
     StateId state = queue.back();
     queue.pop_back();
     Token *tok = cur_toks_[state];
-    KALDI_DECODER_ASSERT(tok != nullptr && state == tok->arc_.nextstate);
+    if (tok == nullptr || state != tok->arc_.nextstate) {
+      throw std::runtime_error("SimpleDecoder::ProcessNonemitting: bad token");
+    }
     for (fst::ArcIterator<fst::Fst<StdArc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
       const StdArc &arc = aiter.Value();
@@ -255,7 +269,6 @@ void SimpleDecoder::ClearToks(std::unordered_map<StateId, Token *> &toks) {
 void SimpleDecoder::PruneToks(float beam,
                               std::unordered_map<StateId, Token *> *toks) {
   if (toks->empty()) {
-    KALDI_DECODER_LOG << "No tokens to prune.\n";
     return;
   }
   double best_cost = std::numeric_limits<double>::infinity();
@@ -278,8 +291,6 @@ void SimpleDecoder::PruneToks(float beam,
     tmp[s] = (*toks)[s];
   }
 
-  KALDI_DECODER_LOG << "Pruned from " << toks->size() << "  to "
-                    << (retained.size()) << " toks.\n";
   tmp.swap(*toks);
 }
 

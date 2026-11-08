@@ -52,11 +52,12 @@
 #ifndef KALDI_DECODER_CSRC_DECODABLE_MATRIX_H_
 #define KALDI_DECODER_CSRC_DECODABLE_MATRIX_H_
 
+#include <sstream>
+#include <stdexcept>
 #include <vector>
 
 #include "kaldi-decoder/csrc/decodable-itf.h"
 #include "kaldi-decoder/csrc/eigen.h"
-#include "kaldi-decoder/csrc/log.h"
 #include "kaldi-decoder/csrc/transition-information.h"
 
 namespace kaldi_decoder {
@@ -92,10 +93,12 @@ class DecodableMatrixScaledMapped : public DecodableInterface {
         tid_to_pdf_(trans_model_.TransitionIdToPdfArray()),
         scale_(scale),
         delete_likes_(false) {
-    if (likes.cols() != tm.NumPdfs())
-      KALDI_DECODER_ERR << "DecodableMatrixScaledMapped: mismatch, matrix has "
-                        << likes.cols() << " cols but transition-model has "
-                        << tm.NumPdfs() << " pdf-ids.";
+    if (likes.cols() != tm.NumPdfs()) {
+      std::ostringstream os;
+      os << "DecodableMatrixScaledMapped: mismatch, matrix has " << likes.cols()
+         << " cols but transition-model has " << tm.NumPdfs() << " pdf-ids.";
+      throw std::runtime_error(os.str());
+    }
   }
 
   /// @brief Construct owning the matrix (deleted when done).
@@ -109,17 +112,23 @@ class DecodableMatrixScaledMapped : public DecodableInterface {
         tid_to_pdf_(trans_model_.TransitionIdToPdfArray()),
         scale_(scale),
         delete_likes_(true) {
-    if (likes->cols() != tm.NumPdfs())
-      KALDI_DECODER_ERR << "DecodableMatrixScaledMapped: mismatch, matrix has "
-                        << likes->cols() << " cols but transition-model has "
-                        << tm.NumPdfs() << " pdf-ids.";
+    if (likes->cols() != tm.NumPdfs()) {
+      std::ostringstream os;
+      os << "DecodableMatrixScaledMapped: mismatch, matrix has "
+         << likes->cols() << " cols but transition-model has " << tm.NumPdfs()
+         << " pdf-ids.";
+      throw std::runtime_error(os.str());
+    }
   }
 
   /// @return The number of frames (matrix rows).
   int32_t NumFramesReady() const override { return likes_->rows(); }
 
   bool IsLastFrame(int32_t frame) const override {
-    KALDI_DECODER_ASSERT(frame < NumFramesReady());
+    if (frame >= NumFramesReady()) {
+      throw std::runtime_error(
+          "DecodableMatrixScaledMapped::IsLastFrame: frame out of range");
+    }
     return frame == NumFramesReady() - 1;
   }
 
@@ -128,9 +137,14 @@ class DecodableMatrixScaledMapped : public DecodableInterface {
   /// @param [in] tid    Transition-id, 1-based.
   /// @return $s \cdot L_{t,\pi(\mathit{tid})}$.
   float LogLikelihood(int32_t frame, int32_t tid) override {
-    KALDI_DECODER_PARANOID_ASSERT(
-        tid >= 1 && tid < static_cast<int32_t>(tid_to_pdf_.size()));
-    KALDI_DECODER_PARANOID_ASSERT(frame >= 0 && frame < NumFramesReady());
+    if (tid < 1 || tid >= static_cast<int32_t>(tid_to_pdf_.size())) {
+      throw std::runtime_error(
+          "DecodableMatrixScaledMapped::LogLikelihood: tid out of range");
+    }
+    if (frame < 0 || frame >= NumFramesReady()) {
+      throw std::runtime_error(
+          "DecodableMatrixScaledMapped::LogLikelihood: frame out of range");
+    }
     return scale_ * (*likes_)(frame, tid_to_pdf_[tid]);
   }
 
@@ -155,7 +169,11 @@ class DecodableMatrixScaledMapped : public DecodableInterface {
   float scale_;
   /// Whether the destructor deletes @c likes_ (owning constructor).
   bool delete_likes_;
-  KALDI_DECODER_DISALLOW_COPY_AND_ASSIGN(DecodableMatrixScaledMapped);
+
+ public:
+  DecodableMatrixScaledMapped(const DecodableMatrixScaledMapped &) = delete;
+  DecodableMatrixScaledMapped &operator=(const DecodableMatrixScaledMapped &) =
+      delete;
 };
 
 /// @brief Matrix-backed decodable with a frame offset (chunked scores).
@@ -209,7 +227,10 @@ class DecodableMatrixMapped : public DecodableInterface {
   const FloatMatrix *likes_to_delete_;
   /// Frame index of row 0.
   int32_t frame_offset_ = 0;
-  KALDI_DECODER_DISALLOW_COPY_AND_ASSIGN(DecodableMatrixMapped);
+
+ public:
+  DecodableMatrixMapped(const DecodableMatrixMapped &) = delete;
+  DecodableMatrixMapped &operator=(const DecodableMatrixMapped &) = delete;
 };
 
 /// @brief Incrementally-fed matrix decodable for streaming decoding.
@@ -254,15 +275,22 @@ class DecodableMatrixMappedOffset : public DecodableInterface {
   }
 
   bool IsLastFrame(int32_t frame) const override {
-    KALDI_DECODER_ASSERT(frame < NumFramesReady());
+    if (frame >= NumFramesReady()) {
+      throw std::runtime_error(
+          "DecodableMatrixMappedOffset::IsLastFrame: frame out of range");
+    }
     return frame == NumFramesReady() - 1 && input_is_finished_;
   }
 
   float LogLikelihood(int32_t frame, int32_t tid) override {
-    KALDI_DECODER_PARANOID_ASSERT(
-        tid >= 1 && tid < static_cast<int32_t>(tid_to_pdf_.size()));
-    KALDI_DECODER_PARANOID_ASSERT(frame >= frame_offset_ &&
-                                  frame < NumFramesReady());
+    if (tid < 1 || tid >= static_cast<int32_t>(tid_to_pdf_.size())) {
+      throw std::runtime_error(
+          "DecodableMatrixMappedOffset::LogLikelihood: tid out of range");
+    }
+    if (frame < frame_offset_ || frame >= NumFramesReady()) {
+      throw std::runtime_error(
+          "DecodableMatrixMappedOffset::LogLikelihood: frame out of range");
+    }
     int32_t pdf_id = tid_to_pdf_[tid];
     return loglikes_(frame - frame_offset_, pdf_id);
   }
@@ -286,7 +314,11 @@ class DecodableMatrixMappedOffset : public DecodableInterface {
   int32_t frame_offset_ = 0;
   /// Set by InputIsFinished(); gates IsLastFrame().
   bool input_is_finished_ = false;
-  KALDI_DECODER_DISALLOW_COPY_AND_ASSIGN(DecodableMatrixMappedOffset);
+
+ public:
+  DecodableMatrixMappedOffset(const DecodableMatrixMappedOffset &) = delete;
+  DecodableMatrixMappedOffset &operator=(const DecodableMatrixMappedOffset &) =
+      delete;
 };
 
 /// @brief Plain matrix-backed decodable with an acoustic scale (no tid map).
@@ -302,17 +334,23 @@ class DecodableMatrixScaled : public DecodableInterface {
   int32_t NumFramesReady() const override { return likes_.rows(); }
 
   bool IsLastFrame(int32_t frame) const override {
-    KALDI_DECODER_ASSERT(frame < NumFramesReady());
+    if (frame >= NumFramesReady()) {
+      throw std::runtime_error(
+          "DecodableMatrixScaled::IsLastFrame: frame out of range");
+    }
     return frame == NumFramesReady() - 1;
   }
 
   // Note, frames are numbered from zero.
   float LogLikelihood(int32_t frame, int32_t index) override {
     if (index > likes_.cols() || index <= 0 || frame < 0 ||
-        frame >= likes_.rows())
-      KALDI_DECODER_ERR << "Invalid (frame, index - 1) = (" << frame << ", "
-                        << index - 1 << ") for matrix of size " << likes_.rows()
-                        << " x " << likes_.cols();
+        frame >= likes_.rows()) {
+      std::ostringstream os;
+      os << "DecodableMatrixScaled: invalid (frame, index - 1) = (" << frame
+         << ", " << index - 1 << ") for matrix of size " << likes_.rows()
+         << " x " << likes_.cols();
+      throw std::runtime_error(os.str());
+    }
     return scale_ * likes_(frame, index - 1);
   }
 
@@ -324,7 +362,10 @@ class DecodableMatrixScaled : public DecodableInterface {
   const FloatMatrix &likes_;
   /// Acoustic scale $s$.
   float scale_;
-  KALDI_DECODER_DISALLOW_COPY_AND_ASSIGN(DecodableMatrixScaled);
+
+ public:
+  DecodableMatrixScaled(const DecodableMatrixScaled &) = delete;
+  DecodableMatrixScaled &operator=(const DecodableMatrixScaled &) = delete;
 };
 
 }  // namespace kaldi_decoder

@@ -10,7 +10,7 @@
 #ifndef KALDI_DECODER_CSRC_DECODABLE_ITF_H_
 #define KALDI_DECODER_CSRC_DECODABLE_ITF_H_
 
-#include "kaldi-decoder/csrc/log.h"
+#include <stdexcept>
 
 namespace kaldi_decoder {
 
@@ -120,9 +120,8 @@ class DecodableInterface {
   ///
   /// @return The number of frames with scores available.
   virtual int32_t NumFramesReady() const {
-    KALDI_DECODER_ERR
-        << "NumFramesReady() not implemented for this decodable type.";
-    return -1;
+    throw std::runtime_error(
+        "NumFramesReady() not implemented for this decodable type.");
   }
 
   /// @brief Number of labels (acoustic states) in the model.

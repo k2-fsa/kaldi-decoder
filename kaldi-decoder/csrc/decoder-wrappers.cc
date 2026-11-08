@@ -9,12 +9,14 @@
 
 #include "kaldi-decoder/csrc/decoder-wrappers.h"
 
+#include <sstream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
 #include "fst/shortest-path.h"
 #include "kaldi-decoder/csrc/faster-decoder.h"
-#include "kaldi-decoder/csrc/log.h"
+#include "kaldi-decoder/csrc/macros.h"
 #include "kaldifst/csrc/fstext-utils.h"
 #include "kaldifst/csrc/lattice-utils.h"
 
@@ -35,12 +37,14 @@ void AlignUtteranceWrapper(
 
   if ((config.retry_beam != 0 && config.retry_beam <= config.beam) ||
       config.beam <= 0.0) {
-    KALDI_DECODER_ERR << "Beams do not make sense: beam " << config.beam
-                      << ", retry-beam " << config.retry_beam;
+    std::ostringstream os;
+    os << "Beams do not make sense: beam " << config.beam << ", retry-beam "
+       << config.retry_beam;
+    throw std::runtime_error(os.str());
   }
 
   if (fst->Start() == fst::kNoStateId) {
-    KALDI_DECODER_WARN << "Empty decoding graph for " << utt;
+    KALDI_DECODER_LOGE("Empty decoding graph for %s", utt.c_str());
     if (num_error != nullptr) {
       (*num_error)++;
     }
@@ -64,8 +68,8 @@ void AlignUtteranceWrapper(
       (*num_retried)++;
     }
 
-    KALDI_DECODER_WARN << "Retrying utterance " << utt << " with beam "
-                       << config.retry_beam;
+    KALDI_DECODER_LOGE("Retrying utterance %s with beam %f", utt.c_str(),
+                       config.retry_beam);
 
     decode_opts.beam = config.retry_beam;
     decoder.SetOptions(decode_opts);
@@ -74,8 +78,8 @@ void AlignUtteranceWrapper(
   }
 
   if (!ans) {  // Still did not reach final state.
-    KALDI_DECODER_WARN << "Did not successfully decode file " << utt
-                       << ", len = " << decodable->NumFramesReady();
+    KALDI_DECODER_LOGE("Did not successfully decode file %s, len = %d",
+                       utt.c_str(), decodable->NumFramesReady());
     if (num_error != nullptr) {
       (*num_error)++;
     }
@@ -87,7 +91,7 @@ void AlignUtteranceWrapper(
   decoder.GetBestPath(&decoded);
 
   if (decoded.NumStates() == 0) {
-    KALDI_DECODER_WARN << "Error getting best path from decoder (likely a bug)";
+    KALDI_DECODER_LOGE("Error getting best path from decoder (likely a bug)");
     if (num_error != nullptr) {
       (*num_error)++;
     }
@@ -122,7 +126,7 @@ void ModifyGraphForCarefulAlignment(fst::VectorFst<fst::StdArc> *fst) {
   typedef Arc::Weight Weight;
   StateId num_states = fst->NumStates();
   if (num_states == 0) {
-    KALDI_DECODER_WARN << "Empty FST input.";
+    KALDI_DECODER_LOGE("Empty FST input.");
     return;
   }
 
@@ -153,7 +157,7 @@ bool DecodeUtteranceLatticeSimple(
     bool allow_partial, float acoustic_scale, std::vector<int32_t> *alignments,
     std::vector<int32_t> *words, double *like_ptr, fst::Lattice *lat_out) {
   if (!decoder.Decode(&decodable)) {
-    KALDI_DECODER_WARN << "Failed to decode utterance with id " << utt;
+    KALDI_DECODER_LOGE("Failed to decode utterance with id %s", utt.c_str());
     return false;
   }
   alignments->clear();
@@ -161,12 +165,15 @@ bool DecodeUtteranceLatticeSimple(
 
   if (!decoder.ReachedFinal()) {
     if (allow_partial) {
-      KALDI_DECODER_WARN << "Outputting partial output for utterance " << utt
-                         << " since no final-state reached\n";
+      KALDI_DECODER_LOGE(
+          "Outputting partial output for utterance %s since no final-state "
+          "reached",
+          utt.c_str());
     } else {
-      KALDI_DECODER_WARN << "Not producing output for utterance " << utt
-                         << " since no final-state reached and "
-                         << "--allow-partial=false.\n";
+      KALDI_DECODER_LOGE(
+          "Not producing output for utterance %s since no final-state reached "
+          "and --allow-partial=false.",
+          utt.c_str());
       return false;
     }
   }
@@ -176,8 +183,9 @@ bool DecodeUtteranceLatticeSimple(
 
   // Likelihood as in kaldi: total cost of the decode-time best path.
   fst::VectorFst<fst::LatticeArc> decoded;
-  if (!decoder.GetBestPath(&decoded))
-    KALDI_DECODER_ERR << "Failed to get traceback for utterance " << utt;
+  if (!decoder.GetBestPath(&decoded)) {
+    throw std::runtime_error("Failed to get traceback for utterance " + utt);
+  }
   std::vector<int32_t> tmp_alignment;
   std::vector<int32_t> tmp_words;
   fst::GetLinearSymbolSequence(decoded, &tmp_alignment, &tmp_words, &weight);
@@ -194,8 +202,10 @@ bool DecodeUtteranceLatticeSimple(
   // Optionally return the lattice exactly as kaldi writes it: with the
   // acoustic costs divided by acoustic_scale (skipped when it is 0).
   if (lat_out != nullptr) {
-    if (!decoder.GetRawLattice(lat_out))
-      KALDI_DECODER_ERR << "Failed to get raw lattice for utterance " << utt;
+    if (!decoder.GetRawLattice(lat_out)) {
+      throw std::runtime_error("Failed to get raw lattice for utterance " +
+                               utt);
+    }
     fst::Connect(lat_out);
     if (acoustic_scale != 0.0)
       fst::ScaleLattice(fst::LatticeScale(1.0, 1.0 / acoustic_scale), lat_out);
@@ -215,17 +225,20 @@ bool DecodeUtteranceLatticeFaster(
   using fst::VectorFst;
 
   if (!decoder.Decode(&decodable)) {
-    KALDI_DECODER_WARN << "Failed to decode utterance with id " << utt;
+    KALDI_DECODER_LOGE("Failed to decode utterance with id %s", utt.c_str());
     return false;
   }
   if (!decoder.ReachedFinal()) {
     if (allow_partial) {
-      KALDI_DECODER_WARN << "Outputting partial output for utterance " << utt
-                         << " since no final-state reached\n";
+      KALDI_DECODER_LOGE(
+          "Outputting partial output for utterance %s since no final-state "
+          "reached",
+          utt.c_str());
     } else {
-      KALDI_DECODER_WARN << "Not producing output for utterance " << utt
-                         << " since no final-state reached and "
-                         << "--allow-partial=false.\n";
+      KALDI_DECODER_LOGE(
+          "Not producing output for utterance %s since no final-state reached "
+          "and --allow-partial=false.",
+          utt.c_str());
       return false;
     }
   }
@@ -235,8 +248,9 @@ bool DecodeUtteranceLatticeFaster(
 
   // Likelihood as in kaldi: total cost of the decode-time best path.
   fst::VectorFst<fst::LatticeArc> decoded;
-  if (!decoder.GetBestPath(&decoded))
-    KALDI_DECODER_ERR << "Failed to get traceback for utterance " << utt;
+  if (!decoder.GetBestPath(&decoded)) {
+    throw std::runtime_error("Failed to get traceback for utterance " + utt);
+  }
   std::vector<int32_t> tmp_alignment;
   std::vector<int32_t> tmp_words;
   fst::GetLinearSymbolSequence(decoded, &tmp_alignment, &tmp_words, &weight);
@@ -253,8 +267,10 @@ bool DecodeUtteranceLatticeFaster(
   // Optionally return the lattice exactly as kaldi writes it: with the
   // acoustic costs divided by acoustic_scale (skipped when it is 0).
   if (lat_out != nullptr) {
-    if (!decoder.GetRawLattice(lat_out))
-      KALDI_DECODER_ERR << "Failed to get raw lattice for utterance " << utt;
+    if (!decoder.GetRawLattice(lat_out)) {
+      throw std::runtime_error("Failed to get raw lattice for utterance " +
+                               utt);
+    }
     fst::Connect(lat_out);
     if (acoustic_scale != 0.0)
       fst::ScaleLattice(fst::LatticeScale(1.0, 1.0 / acoustic_scale), lat_out);
@@ -301,7 +317,7 @@ bool LatticeBestPath(const fst::Lattice &lat, float lm_scale,
   if (best_path.Start() == fst::kNoStateId) {
     // Like kaldi's lattice-best-path: warn and let the caller skip this
     // lattice instead of aborting the whole scoring sweep.
-    KALDI_DECODER_WARN << "LatticeBestPath: best-path failed (empty lattice?)";
+    KALDI_DECODER_LOGE("LatticeBestPath: best-path failed (empty lattice?)");
     return false;
   }
   fst::LatticeWeight weight;

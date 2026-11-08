@@ -10,6 +10,7 @@
 #ifndef KALDI_DECODER_CSRC_LATTICE_SIMPLE_DECODER_H_
 #define KALDI_DECODER_CSRC_LATTICE_SIMPLE_DECODER_H_
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -17,7 +18,6 @@
 #include "fst/fst.h"
 #include "fst/fstlib.h"
 #include "kaldi-decoder/csrc/decodable-itf.h"
-#include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/lattice-weight.h"
 
 /**
@@ -73,8 +73,9 @@ struct LatticeSimpleDecoderConfig {
   }
 #endif
   void Check() const {
-    KALDI_DECODER_ASSERT(beam > 0.0 && lattice_beam > 0.0 &&
-                         prune_interval > 0);
+    if (!(beam > 0.0 && lattice_beam > 0.0 && prune_interval > 0)) {
+      throw std::runtime_error("LatticeSimpleDecoderConfig: invalid options");
+    }
   }
 
   std::string ToString() const {

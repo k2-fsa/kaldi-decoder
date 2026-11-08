@@ -8,6 +8,9 @@
 
 #include "kaldi-decoder/csrc/decodable-matrix.h"
 
+#include <sstream>
+#include <stdexcept>
+
 namespace kaldi_decoder {
 
 DecodableMatrixMapped::DecodableMatrixMapped(const TransitionInformation &tm,
@@ -18,10 +21,12 @@ DecodableMatrixMapped::DecodableMatrixMapped(const TransitionInformation &tm,
       likes_(&likes),
       likes_to_delete_(nullptr),
       frame_offset_(frame_offset) {
-  if (likes.cols() != tm.NumPdfs())
-    KALDI_DECODER_ERR << "Mismatch, matrix has " << likes.cols()
-                      << " cols but transition-model has " << tm.NumPdfs()
-                      << " pdf-ids.";
+  if (likes.cols() != tm.NumPdfs()) {
+    std::ostringstream os;
+    os << "DecodableMatrixMapped: mismatch, matrix has " << likes.cols()
+       << " cols but transition-model has " << tm.NumPdfs() << " pdf-ids.";
+    throw std::runtime_error(os.str());
+  }
 }
 
 DecodableMatrixMapped::DecodableMatrixMapped(const TransitionInformation &tm,
@@ -32,17 +37,23 @@ DecodableMatrixMapped::DecodableMatrixMapped(const TransitionInformation &tm,
       likes_(likes),
       likes_to_delete_(likes),
       frame_offset_(frame_offset) {
-  if (likes->cols() != tm.NumPdfs())
-    KALDI_DECODER_ERR << "Mismatch, matrix has " << likes->cols()
-                      << " cols but transition-model has " << tm.NumPdfs()
-                      << " pdf-ids.";
+  if (likes->cols() != tm.NumPdfs()) {
+    std::ostringstream os;
+    os << "DecodableMatrixMapped: mismatch, matrix has " << likes->cols()
+       << " cols but transition-model has " << tm.NumPdfs() << " pdf-ids.";
+    throw std::runtime_error(os.str());
+  }
 }
 
 float DecodableMatrixMapped::LogLikelihood(int32_t frame, int32_t tid) {
-  KALDI_DECODER_PARANOID_ASSERT(tid >= 1 &&
-                                tid < static_cast<int32_t>(tid_to_pdf_.size()));
-  KALDI_DECODER_PARANOID_ASSERT(frame >= frame_offset_ &&
-                                frame < NumFramesReady());
+  if (tid < 1 || tid >= static_cast<int32_t>(tid_to_pdf_.size())) {
+    throw std::runtime_error(
+        "DecodableMatrixMapped::LogLikelihood: tid out of range");
+  }
+  if (frame < frame_offset_ || frame >= NumFramesReady()) {
+    throw std::runtime_error(
+        "DecodableMatrixMapped::LogLikelihood: frame out of range");
+  }
   int32_t pdf_id = tid_to_pdf_[tid];
   return (*likes_)(frame - frame_offset_, pdf_id);
 }
@@ -52,7 +63,10 @@ int32_t DecodableMatrixMapped::NumFramesReady() const {
 }
 
 bool DecodableMatrixMapped::IsLastFrame(int32_t frame) const {
-  KALDI_DECODER_ASSERT(frame < NumFramesReady());
+  if (frame >= NumFramesReady()) {
+    throw std::runtime_error(
+        "DecodableMatrixMapped::IsLastFrame: frame out of range");
+  }
   return frame == NumFramesReady() - 1;
 }
 
@@ -66,9 +80,14 @@ DecodableMatrixMapped::~DecodableMatrixMapped() { delete likes_to_delete_; }
 void DecodableMatrixMappedOffset::AcceptLoglikes(FloatMatrix *loglikes,
                                                  int32_t frames_to_discard) {
   if (loglikes->rows() == 0) return;
-  KALDI_DECODER_ASSERT(loglikes->cols() == trans_model_.NumPdfs());
-  KALDI_DECODER_ASSERT(frames_to_discard <= loglikes_.rows() &&
-                       frames_to_discard >= 0);
+  if (loglikes->cols() != trans_model_.NumPdfs()) {
+    throw std::runtime_error(
+        "DecodableMatrixMappedOffset::AcceptLoglikes: wrong number of cols");
+  }
+  if (frames_to_discard > loglikes_.rows() || frames_to_discard < 0) {
+    throw std::runtime_error(
+        "DecodableMatrixMappedOffset::AcceptLoglikes: bad frames_to_discard");
+  }
   if (frames_to_discard == loglikes_.rows()) {
     loglikes_.swap(*loglikes);
     loglikes->resize(0, 0);

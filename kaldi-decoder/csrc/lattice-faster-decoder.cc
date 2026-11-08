@@ -17,11 +17,13 @@ typedef uint64_t uint64;
 
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 
 #include "kaldi-decoder/csrc/kaldi-math.h"
 #include "kaldi-decoder/csrc/lattice-faster-decoder.h"
+#include "kaldi-decoder/csrc/macros.h"
 
 namespace kaldi_decoder {
 
@@ -74,7 +76,9 @@ void LatticeFasterDecoderTpl<FST, Token>::InitDecoding() {
   decoding_finalized_ = false;
   final_costs_.clear();
   StateId start_state = fst_->Start();
-  KALDI_DECODER_ASSERT(start_state != fst::kNoStateId);
+  if (start_state == fst::kNoStateId) {
+    throw std::runtime_error("LatticeFasterDecoderTpl::InitDecoding: no start");
+  }
   active_toks_.resize(1);
   Token *start_tok =
       new (token_pool_.Allocate()) Token(0.0, 0.0, nullptr, nullptr, nullptr);
@@ -124,9 +128,11 @@ bool LatticeFasterDecoderTpl<FST, Token>::GetRawLattice(
   // Note: you can't use the old interface (Decode()) if you want to
   // get the lattice with use_final_probs = false.  You'd have to do
   // InitDecoding() and then AdvanceDecoding().
-  if (decoding_finalized_ && !use_final_probs)
-    KALDI_DECODER_ERR << "You cannot call FinalizeDecoding() and then call "
-                      << "GetRawLattice() with use_final_probs == false";
+  if (decoding_finalized_ && !use_final_probs) {
+    throw std::runtime_error(
+        "You cannot call FinalizeDecoding() and then call GetRawLattice() "
+        "with use_final_probs == false");
+  }
 
   std::unordered_map<Token *, float> final_costs_local;
 
@@ -139,15 +145,18 @@ bool LatticeFasterDecoderTpl<FST, Token>::GetRawLattice(
   // num-frames plus one (since frames are one-based, and we have
   // an extra frame for the start-state).
   int32 num_frames = active_toks_.size() - 1;
-  KALDI_DECODER_ASSERT(num_frames > 0);
+  if (num_frames <= 0) {
+    throw std::runtime_error("LatticeFasterDecoderTpl::GetRawLattice: empty");
+  }
   const int32 bucket_count = num_toks_ / 2 + 3;
   std::unordered_map<Token *, StateId> tok_map(bucket_count);
   // First create all states.
   std::vector<Token *> token_list;
   for (int32 f = 0; f <= num_frames; f++) {
     if (active_toks_[f].toks == nullptr) {
-      KALDI_DECODER_WARN << "GetRawLattice: no tokens active on frame " << f
-                         << ": not producing lattice.\n";
+      KALDI_DECODER_LOGE(
+          "GetRawLattice: no tokens active on frame %d: not producing lattice.",
+          f);
       return false;
     }
     TopSortTokens(active_toks_[f].toks, &token_list);
@@ -161,10 +170,6 @@ bool LatticeFasterDecoderTpl<FST, Token>::GetRawLattice(
   // topologically sorted the tokens, state zero must be the start-state.
   ofst->SetStart(0);
 
-  KALDI_DECODER_LOG << "init:" << num_toks_ / 2 + 3
-                    << " buckets:" << tok_map.bucket_count()
-                    << " load:" << tok_map.load_factor()
-                    << " max:" << tok_map.max_load_factor();
   // Now create all arcs.
   for (int32 f = 0; f <= num_frames; f++) {
     for (Token *tok = active_toks_[f].toks; tok != nullptr; tok = tok->next) {
@@ -172,11 +177,17 @@ bool LatticeFasterDecoderTpl<FST, Token>::GetRawLattice(
       for (ForwardLinkT *l = tok->links; l != nullptr; l = l->next) {
         typename std::unordered_map<Token *, StateId>::const_iterator iter =
             tok_map.find(l->next_tok);
+        if (iter == tok_map.end()) {
+          throw std::runtime_error(
+              "LatticeFasterDecoderTpl::GetRawLattice: missing token");
+        }
         StateId nextstate = iter->second;
-        KALDI_DECODER_ASSERT(iter != tok_map.end());
         float cost_offset = 0.0;
         if (l->ilabel != 0) {  // emitting..
-          KALDI_DECODER_ASSERT(f >= 0 && f < cost_offsets_.size());
+          if (f < 0 || f >= cost_offsets_.size()) {
+            throw std::runtime_error(
+                "LatticeFasterDecoderTpl::GetRawLattice: frame out of range");
+          }
           cost_offset = cost_offsets_[f];
         }
         Arc arc(l->ilabel, l->olabel,
@@ -268,7 +279,10 @@ LatticeFasterDecoderTpl<FST, Token>::FindOrAddToken(StateId state,
                                                     bool *changed) {
   // Returns the Token pointer.  Sets "changed" (if non-nullptr) to true
   // if the token was newly created or the cost changed.
-  KALDI_DECODER_ASSERT(frame_plus_one < active_toks_.size());
+  if (frame_plus_one >= active_toks_.size()) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::FindOrAddToken: frame out of range");
+  }
   Token *&toks = active_toks_[frame_plus_one].toks;
   Elem *e_found = toks_.Insert(state, nullptr);
   if (e_found->val == nullptr) {  // no such token presently.
@@ -321,13 +335,16 @@ void LatticeFasterDecoderTpl<FST, Token>::PruneForwardLinks(
 
   *extra_costs_changed = false;
   *links_pruned = false;
-  KALDI_DECODER_ASSERT(frame_plus_one >= 0 &&
-                       frame_plus_one < active_toks_.size());
+  if (frame_plus_one < 0 || frame_plus_one >= active_toks_.size()) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::PruneForwardLinks: frame out of range");
+  }
   if (active_toks_[frame_plus_one].toks ==
       nullptr) {  // empty list; should not happen.
     if (!warned_) {
-      KALDI_DECODER_WARN << "No tokens alive [doing pruning].. warning first "
-                            "time only for each utterance\n";
+      KALDI_DECODER_LOGE(
+          "No tokens alive [doing pruning].. warning first time only for each "
+          "utterance");
       warned_ = true;
     }
   }
@@ -353,8 +370,11 @@ void LatticeFasterDecoderTpl<FST, Token>::PruneForwardLinks(
              next_tok->tot_cost);  // difference in brackets is >= 0
         // link_exta_cost is the difference in score between the best paths
         // through link source state and through link destination state
-        KALDI_DECODER_ASSERT(link_extra_cost ==
-                             link_extra_cost);         // check for NaN
+        // check for NaN
+        if (link_extra_cost != link_extra_cost) {
+          throw std::runtime_error(
+              "LatticeFasterDecoderTpl: NaN link_extra_cost");
+        }
         if (link_extra_cost > config_.lattice_beam) {  // excise link
           ForwardLinkT *next_link = link->next;
           if (prev_link != nullptr)
@@ -367,7 +387,7 @@ void LatticeFasterDecoderTpl<FST, Token>::PruneForwardLinks(
         } else {  // keep the link and update the tok_extra_cost if needed.
           if (link_extra_cost < 0.0) {  // this is just a precaution.
             if (link_extra_cost < -0.01)
-              KALDI_DECODER_WARN << "Negative extra_cost: " << link_extra_cost;
+              KALDI_DECODER_LOGE("Negative extra_cost: %f", link_extra_cost);
             link_extra_cost = 0.0;
           }
           if (link_extra_cost < tok_extra_cost)
@@ -395,12 +415,15 @@ void LatticeFasterDecoderTpl<FST, Token>::PruneForwardLinks(
 // the final-probs for pruning, otherwise it treats all tokens as final.
 template <typename FST, typename Token>
 void LatticeFasterDecoderTpl<FST, Token>::PruneForwardLinksFinal() {
-  KALDI_DECODER_ASSERT(!active_toks_.empty());
+  if (active_toks_.empty()) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::PruneForwardLinksFinal: no tokens");
+  }
   int32 frame_plus_one = active_toks_.size() - 1;
 
   if (active_toks_[frame_plus_one].toks ==
       nullptr)  // empty list; should not happen.
-    KALDI_DECODER_WARN << "No tokens alive at end of file";
+    KALDI_DECODER_LOGE("No tokens alive at end of file");
 
   typedef typename std::unordered_map<Token *, float>::const_iterator IterType;
   ComputeFinalCosts(&final_costs_, &final_relative_cost_, &final_best_cost_);
@@ -459,7 +482,7 @@ void LatticeFasterDecoderTpl<FST, Token>::PruneForwardLinksFinal() {
         } else {  // keep the link and update the tok_extra_cost if needed.
           if (link_extra_cost < 0.0) {  // this is just a precaution.
             if (link_extra_cost < -0.01)
-              KALDI_DECODER_WARN << "Negative extra_cost: " << link_extra_cost;
+              KALDI_DECODER_LOGE("Negative extra_cost: %f", link_extra_cost);
             link_extra_cost = 0.0;
           }
           if (link_extra_cost < tok_extra_cost)
@@ -503,10 +526,14 @@ float LatticeFasterDecoderTpl<FST, Token>::FinalRelativeCost() const {
 template <typename FST, typename Token>
 void LatticeFasterDecoderTpl<FST, Token>::PruneTokensForFrame(
     int32 frame_plus_one) {
-  KALDI_DECODER_ASSERT(frame_plus_one >= 0 &&
-                       frame_plus_one < active_toks_.size());
+  if (frame_plus_one < 0 || frame_plus_one >= active_toks_.size()) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::PruneTokensForFrame: frame out of range");
+  }
   Token *&toks = active_toks_[frame_plus_one].toks;
-  if (toks == nullptr) KALDI_DECODER_WARN << "No tokens alive [doing pruning]";
+  if (toks == nullptr) {
+    KALDI_DECODER_LOGE("No tokens alive [doing pruning]");
+  }
   Token *tok = nullptr;
   Token *next_tok = nullptr;
   Token *prev_tok = nullptr;
@@ -535,7 +562,6 @@ void LatticeFasterDecoderTpl<FST, Token>::PruneTokensForFrame(
 template <typename FST, typename Token>
 void LatticeFasterDecoderTpl<FST, Token>::PruneActiveTokens(float delta) {
   int32 cur_frame_plus_one = NumFramesDecoded();
-  int32 num_toks_begin = num_toks_;
   // The index "f" below represents a "frame plus one", i.e. you'd have to
   // subtract one to get the corresponding index for the decodable object.
   for (int32 f = cur_frame_plus_one - 1; f >= 0; f--) {
@@ -558,15 +584,16 @@ void LatticeFasterDecoderTpl<FST, Token>::PruneActiveTokens(float delta) {
       active_toks_[f + 1].must_prune_tokens = false;
     }
   }
-  KALDI_DECODER_LOG << "PruneActiveTokens: pruned tokens from "
-                    << num_toks_begin << " to " << num_toks_;
 }
 
 template <typename FST, typename Token>
 void LatticeFasterDecoderTpl<FST, Token>::ComputeFinalCosts(
     std::unordered_map<Token *, float> *final_costs, float *final_relative_cost,
     float *final_best_cost) const {
-  KALDI_DECODER_ASSERT(!decoding_finalized_);
+  if (decoding_finalized_) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::ComputeFinalCosts: decoding finalized");
+  }
   if (final_costs != nullptr) final_costs->clear();
   const Elem *final_toks = toks_.GetList();
   float infinity = std::numeric_limits<float>::infinity();
@@ -626,14 +653,19 @@ void LatticeFasterDecoderTpl<FST, Token>::AdvanceDecoding(
     }
   }
 
-  KALDI_DECODER_ASSERT(!active_toks_.empty() && !decoding_finalized_ &&
-                       "You must call InitDecoding() before AdvanceDecoding");
+  if (active_toks_.empty() || decoding_finalized_) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::AdvanceDecoding: call InitDecoding() first");
+  }
   int32 num_frames_ready = decodable->NumFramesReady();
   // num_frames_ready must be >= num_frames_decoded, or else
   // the number of frames ready must have decreased (which doesn't
   // make sense) or the decodable object changed between calls
   // (which isn't allowed).
-  KALDI_DECODER_ASSERT(num_frames_ready >= NumFramesDecoded());
+  if (num_frames_ready < NumFramesDecoded()) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::AdvanceDecoding: num_frames_ready decreased");
+  }
   int32 target_frames_decoded = num_frames_ready;
   if (max_num_frames >= 0)
     target_frames_decoded =
@@ -653,7 +685,6 @@ void LatticeFasterDecoderTpl<FST, Token>::AdvanceDecoding(
 template <typename FST, typename Token>
 void LatticeFasterDecoderTpl<FST, Token>::FinalizeDecoding() {
   int32 final_frame_plus_one = NumFramesDecoded();
-  int32 num_toks_begin = num_toks_;
   // PruneForwardLinksFinal() prunes final frame (with final-probs), and
   // sets decoding_finalized_.
   PruneForwardLinksFinal();
@@ -665,8 +696,6 @@ void LatticeFasterDecoderTpl<FST, Token>::FinalizeDecoding() {
     PruneTokensForFrame(f + 1);
   }
   PruneTokensForFrame(0);
-  KALDI_DECODER_LOG << "pruned tokens from " << num_toks_begin << " to "
-                    << num_toks_;
 }
 
 /// Gets the weight cutoff.  Also counts the active tokens.
@@ -706,9 +735,6 @@ float LatticeFasterDecoderTpl<FST, Token>::GetCutoff(Elem *list_head,
           min_active_cutoff = std::numeric_limits<float>::infinity(),
           max_active_cutoff = std::numeric_limits<float>::infinity();
 
-    KALDI_DECODER_LOG << "Number of tokens active on frame "
-                      << NumFramesDecoded() << " is " << tmp_array_.size();
-
     if (tmp_array_.size() > static_cast<size_t>(config_.max_active)) {
       std::nth_element(tmp_array_.begin(),
                        tmp_array_.begin() + config_.max_active,
@@ -746,7 +772,10 @@ float LatticeFasterDecoderTpl<FST, Token>::GetCutoff(Elem *list_head,
 template <typename FST, typename Token>
 float LatticeFasterDecoderTpl<FST, Token>::ProcessEmitting(
     DecodableInterface *decodable) {
-  KALDI_DECODER_ASSERT(!active_toks_.empty());
+  if (active_toks_.empty()) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::ProcessEmitting: no tokens");
+  }
   int32 frame =
       active_toks_.size() - 1;  // frame is the frame-index
                                 // (zero-based) used to get likelihoods
@@ -762,8 +791,6 @@ float LatticeFasterDecoderTpl<FST, Token>::ProcessEmitting(
   size_t tok_cnt = 0;
   float cur_cutoff =
       GetCutoff(final_toks, &tok_cnt, &adaptive_beam, &best_elem);
-  KALDI_DECODER_LOG << "Adaptive beam on frame " << NumFramesDecoded() << " is "
-                    << adaptive_beam;
 
   PossiblyResizeHash(
       tok_cnt);  // This makes sure the hash is always big enough.
@@ -857,7 +884,10 @@ void LatticeFasterDecoderTpl<FST, Token>::DeleteForwardLinks(Token *tok) {
 
 template <typename FST, typename Token>
 void LatticeFasterDecoderTpl<FST, Token>::ProcessNonemitting(float cutoff) {
-  KALDI_DECODER_ASSERT(!active_toks_.empty());
+  if (active_toks_.empty()) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::ProcessNonemitting: no tokens");
+  }
   int32 frame = static_cast<int32>(active_toks_.size()) - 2;
   // Note: "frame" is the time-index we just processed, or -1 if
   // we are processing the nonemitting transitions before the
@@ -869,11 +899,14 @@ void LatticeFasterDecoderTpl<FST, Token>::ProcessNonemitting(float cutoff) {
   // but in the baseline code, turning this vector into a set to fix this
   // problem did not improve overall speed.
 
-  KALDI_DECODER_ASSERT(queue_.empty());
+  if (!queue_.empty()) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::ProcessNonemitting: queue_ not empty");
+  }
 
   if (toks_.GetList() == nullptr) {
     if (!warned_) {
-      KALDI_DECODER_WARN << "Error, no surviving tokens: frame is " << frame;
+      KALDI_DECODER_LOGE("Error, no surviving tokens: frame is %d", frame);
       warned_ = true;
     }
   }
@@ -947,7 +980,10 @@ void LatticeFasterDecoderTpl<
     }
   }
   active_toks_.clear();
-  KALDI_DECODER_ASSERT(num_toks_ == 0);
+  if (num_toks_ != 0) {
+    throw std::runtime_error(
+        "LatticeFasterDecoderTpl::ClearActiveTokens: num_toks_ != 0");
+  }
 }
 
 // static
@@ -1022,9 +1058,10 @@ void LatticeFasterDecoderTpl<FST, Token>::TopSortTokens(
       }
     }
   }
-  KALDI_DECODER_ASSERT(loop_count < max_loop &&
-                       "Epsilon loops exist in your decoding "
-                       "graph (this is not allowed!)");
+  if (loop_count >= max_loop) {
+    throw std::runtime_error(
+        "Epsilon loops exist in your decoding graph (this is not allowed!)");
+  }
 
   topsorted_list->clear();
   topsorted_list->resize(cur_pos,

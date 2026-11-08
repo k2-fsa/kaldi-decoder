@@ -114,7 +114,10 @@ class DecodableCtc : public DecodableInterface {
 
   // p_ aliases the log_probs_ buffer; copying would leave the copy's p_
   // pointing into the source object's matrix (dangling after destruction).
-  KALDI_DECODER_DISALLOW_COPY_AND_ASSIGN(DecodableCtc);
+
+ public:
+  DecodableCtc(const DecodableCtc &) = delete;
+  DecodableCtc &operator=(const DecodableCtc &) = delete;
 };
 
 }  // namespace kaldi_decoder

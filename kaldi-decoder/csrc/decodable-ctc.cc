@@ -4,7 +4,8 @@
 
 #include "kaldi-decoder/csrc/decodable-ctc.h"
 
-#include "kaldi-decoder/csrc/log.h"
+#include <sstream>
+#include <stdexcept>
 
 namespace kaldi_decoder {
 
@@ -26,10 +27,13 @@ float DecodableCtc::LogLikelihood(int32_t frame, int32_t index) {
   // all the input labels of the H are incremented during graph
   // construction
   if (index > num_cols_ || index <= 0 || frame < offset_ ||
-      frame >= offset_ + num_rows_)
-    KALDI_DECODER_ERR << "Invalid (frame, index) = (" << frame << ", " << index
-                      << ") for matrix of size " << num_rows_ << " x "
-                      << num_cols_ << " with offset " << offset_;
+      frame >= offset_ + num_rows_) {
+    std::ostringstream os;
+    os << "DecodableCtc: invalid (frame, index) = (" << frame << ", " << index
+       << ") for matrix of size " << num_rows_ << " x " << num_cols_
+       << " with offset " << offset_;
+    throw std::runtime_error(os.str());
+  }
 
   return *(p_ + (frame - offset_) * num_cols_ + index - 1);
 }
@@ -39,7 +43,9 @@ int32_t DecodableCtc::NumFramesReady() const { return offset_ + num_rows_; }
 int32_t DecodableCtc::NumIndices() const { return num_cols_; }
 
 bool DecodableCtc::IsLastFrame(int32_t frame) const {
-  KALDI_DECODER_ASSERT(frame < NumFramesReady());
+  if (frame >= NumFramesReady()) {
+    throw std::runtime_error("DecodableCtc::IsLastFrame: frame out of range");
+  }
   return (frame == NumFramesReady() - 1);
 }
 

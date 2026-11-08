@@ -65,7 +65,7 @@ void TestHashList() {
     const Elem *list = hash.GetList();
     size_t count = 0;
     for (; list != nullptr; list = list->tail, count++) {
-      KALDI_DECODER_ASSERT(m1[list->key] == list->val);
+      EXPECT_EQ(m1[list->key], list->val);
     }
 
     for (size_t j = 0; j < 10; j++) {
@@ -75,12 +75,14 @@ void TestHashList() {
       if (found_m1) m1[key];
 
       Elem *e = hash.Find(key);
-      KALDI_DECODER_ASSERT((e != nullptr) == found_m1);
+      EXPECT_EQ(e != nullptr, found_m1);
 
-      if (found_m1) KALDI_DECODER_ASSERT(m1[key] == e->val);
+      if (found_m1) {
+        EXPECT_EQ(m1[key], e->val);
+      }
     }
 
-    KALDI_DECODER_ASSERT(m1.size() == count);
+    EXPECT_EQ(m1.size(), count);
   }
 
   Elem *h = hash.Clear();

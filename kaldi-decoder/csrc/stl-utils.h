@@ -9,11 +9,11 @@
 #define KALDI_DECODER_CSRC_STL_UTILS_H_
 #include <algorithm>
 #include <istream>
+#include <sstream>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include "kaldi-decoder/csrc/log.h"
 
 namespace kaldi_decoder {
 
@@ -62,7 +62,9 @@ inline void WriteIntegerVector(std::ostream &os, bool binary,
     char sz = sizeof(T);  // this is currently just a check.
     os.write(&sz, 1);
     int32_t vecsz = static_cast<int32_t>(v.size());
-    KALDI_DECODER_ASSERT((size_t)vecsz == v.size());
+    if (static_cast<size_t>(vecsz) != v.size()) {
+      throw std::runtime_error("WriteIntegerVector: v.size() out of range");
+    }
 
     os.write(reinterpret_cast<const char *>(&vecsz), sizeof(vecsz));
     if (vecsz != 0) {
@@ -84,7 +86,7 @@ inline void WriteIntegerVector(std::ostream &os, bool binary,
     os << "]\n";
   }
   if (os.fail()) {
-    KALDI_DECODER_ERR << "Write failure in WriteIntegerVector.";
+    throw std::runtime_error("Write failure in WriteIntegerVector.");
   }
 }
 
@@ -92,15 +94,18 @@ template <class T>
 inline void ReadIntegerVector(std::istream &is, bool binary,
                               std::vector<T> *v) {
   static_assert(std::is_integral_v<T>);
-  KALDI_DECODER_ASSERT(v != nullptr);
+  if (v == nullptr) {
+    throw std::runtime_error("ReadIntegerVector: v != nullptr");
+  }
   if (binary) {
     int sz = is.peek();
     if (sz == sizeof(T)) {
       is.get();
     } else {  // this is currently just a check.
-      KALDI_DECODER_ERR << "ReadIntegerVector: expected to see type of size "
-                        << sizeof(T) << ", saw instead " << sz
-                        << ", at file position " << is.tellg();
+      std::ostringstream os;
+      os << "ReadIntegerVector: expected to see type of size " << sizeof(T)
+         << ", saw instead " << sz << ", at file position " << is.tellg();
+      throw std::runtime_error(os.str());
     }
     int32_t vecsz = 0;
     is.read(reinterpret_cast<char *>(&vecsz), sizeof(vecsz));
@@ -118,8 +123,10 @@ inline void ReadIntegerVector(std::istream &is, bool binary,
                            // due to resizing.
     is >> std::ws;
     if (is.peek() != static_cast<int>('[')) {
-      KALDI_DECODER_ERR << "ReadIntegerVector: expected to see [, saw "
-                        << is.peek() << ", at file position " << is.tellg();
+      std::ostringstream os;
+      os << "ReadIntegerVector: expected to see [, saw " << is.peek()
+         << ", at file position " << is.tellg();
+      throw std::runtime_error(os.str());
     }
     is.get();       // consume the '['.
     is >> std::ws;  // consume whitespace.
@@ -147,16 +154,20 @@ inline void ReadIntegerVector(std::istream &is, bool binary,
     // uses less permanent memory.
   }
   if (!is.fail()) return;
-bad:
-  KALDI_DECODER_ERR << "ReadIntegerVector: read failure at file position "
-                    << is.tellg();
+bad: {
+  std::ostringstream os;
+  os << "ReadIntegerVector: read failure at file position " << is.tellg();
+  throw std::runtime_error(os.str());
+}
 }
 
 /// Deletes any non-nullptr pointers in the vector v, and sets
 /// the corresponding entries of v to nullptr
 template <class A>
 void DeletePointers(std::vector<A *> *v) {
-  KALDI_DECODER_ASSERT(v != nullptr);
+  if (v == nullptr) {
+    throw std::runtime_error("DeletePointers: v != nullptr");
+  }
   typename std::vector<A *>::iterator iter = v->begin(), end = v->end();
   for (; iter != end; ++iter) {
     if (*iter != nullptr) {

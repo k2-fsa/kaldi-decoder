@@ -12,6 +12,7 @@
 #define KALDI_DECODER_CSRC_LATTICE_FASTER_DECODER_H_
 
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -21,7 +22,6 @@
 #include "kaldi-decoder/csrc/decodable-itf.h"
 #include "kaldi-decoder/csrc/determinize-lattice-pruned.h"
 #include "kaldi-decoder/csrc/hash-list.h"
-#include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/lattice-weight.h"
 
 /**
@@ -124,10 +124,11 @@ struct LatticeFasterDecoderConfig {
   /// @brief Validate option ranges; throws on bad values (kaldi @c Check()).
   /// @see LatticeFasterDecoderConfig
   void Check() const {
-    KALDI_DECODER_ASSERT(beam > 0.0 && max_active > 1 && lattice_beam > 0.0 &&
-                         min_active <= max_active && prune_interval > 0 &&
-                         beam_delta > 0.0 && hash_ratio >= 1.0 &&
-                         prune_scale > 0.0 && prune_scale < 1.0);
+    if (!(beam > 0.0 && max_active > 1 && lattice_beam > 0.0 &&
+          min_active <= max_active && prune_interval > 0 && beam_delta > 0.0 &&
+          hash_ratio >= 1.0 && prune_scale > 0.0 && prune_scale < 1.0)) {
+      throw std::runtime_error("LatticeFasterDecoderConfig: invalid options");
+    }
   }
 };
 

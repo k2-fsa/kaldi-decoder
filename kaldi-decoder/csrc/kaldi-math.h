@@ -28,8 +28,6 @@
 #define KALDI_ISINF std::isinf
 #define KALDI_ISNAN std::isnan
 
-#include "kaldi-decoder/csrc/log.h"
-
 namespace kaldi_decoder {
 
 /// return abs(a - b) <= relative_tolerance * (abs(a)+abs(b)).

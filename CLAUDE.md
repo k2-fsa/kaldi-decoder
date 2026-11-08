@@ -61,7 +61,9 @@ ctest --output-on-failure     # gtest + python tests (<name>_py)
     instead of kaldi table-writers; best path via scalarized `fst::ShortestPath`
     with lm_scale/wip semantics matching `lattice-best-path`)
   - `hash-list*` ← `util/hash-list*`; `kaldi-math.h` ← `base/kaldi-math.h`;
-    `stl-utils.h` ← `util/stl-utils.h`; `log.h` = logging (replaces kaldi-log.h)
+    `stl-utils.h` ← `util/stl-utils.h`; `macros.h` = `KALDI_DECODER_LOGE()` logging
+    (original, modeled on kaldi-native-fbank's `macros.h`); checks throw
+    `std::runtime_error` directly (no assert macro)
   - `decodable-ctc` = original (matrix-backed decodable, no kaldi counterpart)
   - lattice types (`fst::LatticeArc`, `CompactLattice`, `ScaleLattice`) come
     from the **kaldifst** dependency — do not duplicate them here.
