@@ -11,9 +11,9 @@
 
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
 #include <utility>
 
-#include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/remove-eps-local.h"
 
 namespace kaldi_decoder {
@@ -21,18 +21,23 @@ namespace kaldi_decoder {
 FasterDecoder::FasterDecoder(const fst::Fst<fst::StdArc> &fst,
                              const FasterDecoderOptions &opts)
     : fst_(fst), config_(opts), num_frames_decoded_(-1) {
-  KALDI_DECODER_ASSERT(config_.hash_ratio >=
-                       1.0);  // less doesn't make much sense.
-  KALDI_DECODER_ASSERT(config_.max_active > 1);
-  KALDI_DECODER_ASSERT(config_.min_active >= 0 &&
-                       config_.min_active < config_.max_active);
+  if (config_.hash_ratio < 1.0) {  // less doesn't make much sense.
+    throw std::runtime_error("FasterDecoder: hash_ratio must be >= 1.0");
+  }
+  if (config_.max_active <= 1) {
+    throw std::runtime_error("FasterDecoder: max_active must be > 1");
+  }
+  if (config_.min_active < 0 || config_.min_active >= config_.max_active) {
+    throw std::runtime_error("FasterDecoder: bad min_active");
+  }
 
   // just so on the first frame we do something reasonable.
   toks_.SetSize(1000);
 }
 
 void FasterDecoder::ClearToks(Elem *list) {
-  for (Elem *e = list, *e_tail; e != nullptr; e = e_tail) {
+  Elem *e_tail = nullptr;
+  for (Elem *e = list; e != nullptr; e = e_tail) {
     Token::TokenDelete(e->val);
     e_tail = e->tail;
     toks_.Delete(e);
@@ -44,7 +49,9 @@ void FasterDecoder::InitDecoding() {
   ClearToks(toks_.Clear());
   StateId start_state = fst_.Start();
 
-  KALDI_DECODER_ASSERT(start_state != fst::kNoStateId);
+  if (start_state == fst::kNoStateId) {
+    throw std::runtime_error("FasterDecoder::InitDecoding: FST has no start");
+  }
 
   Arc dummy_arc(0, 0, Weight::One(), start_state);
 
@@ -58,7 +65,9 @@ void FasterDecoder::InitDecoding() {
 // TODO(dan): first time we go through this, could avoid using the queue.
 void FasterDecoder::ProcessNonemitting(double cutoff) {
   // Processes nonemitting arcs for one frame.
-  KALDI_DECODER_ASSERT(queue_.empty());
+  if (!queue_.empty()) {
+    throw std::runtime_error("FasterDecoder::ProcessNonemitting: queue busy");
+  }
 
   for (const Elem *e = toks_.GetList(); e != nullptr; e = e->tail) {
     queue_.push_back(e);
@@ -75,7 +84,9 @@ void FasterDecoder::ProcessNonemitting(double cutoff) {
       continue;
     }
 
-    KALDI_DECODER_ASSERT(tok != nullptr && state == tok->arc_.nextstate);
+    if (tok == nullptr || state != tok->arc_.nextstate) {
+      throw std::runtime_error("FasterDecoder::ProcessNonemitting: bad token");
+    }
 
     for (fst::ArcIterator<fst::Fst<Arc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
@@ -125,8 +136,10 @@ void FasterDecoder::Decode(DecodableInterface *decodable) {
 
 void FasterDecoder::AdvanceDecoding(DecodableInterface *decodable,
                                     int32_t max_num_frames /*=-1*/) {
-  KALDI_DECODER_ASSERT(num_frames_decoded_ >= 0 &&
-                       "You must call InitDecoding() before AdvanceDecoding()");
+  if (num_frames_decoded_ < 0) {
+    throw std::runtime_error(
+        "FasterDecoder::AdvanceDecoding: call InitDecoding() first");
+  }
 
   int32_t num_frames_ready = decodable->NumFramesReady();
 
@@ -134,7 +147,10 @@ void FasterDecoder::AdvanceDecoding(DecodableInterface *decodable,
   // the number of frames ready must have decreased (which doesn't
   // make sense) or the decodable object changed between calls
   // (which isn't allowed).
-  KALDI_DECODER_ASSERT(num_frames_ready >= num_frames_decoded_);
+  if (num_frames_ready < num_frames_decoded_) {
+    throw std::runtime_error(
+        "FasterDecoder::AdvanceDecoding: num_frames_ready decreased");
+  }
 
   int32_t target_frames_decoded = num_frames_ready;
 
@@ -155,13 +171,11 @@ void FasterDecoder::AdvanceDecoding(DecodableInterface *decodable,
 double FasterDecoder::ProcessEmitting(DecodableInterface *decodable) {
   int32_t frame = num_frames_decoded_;
   Elem *last_toks = toks_.Clear();
-  size_t tok_cnt;
-  float adaptive_beam;
+  size_t tok_cnt = 0;
+  float adaptive_beam = 0.0f;
   Elem *best_elem = nullptr;
   double weight_cutoff =
       GetCutoff(last_toks, &tok_cnt, &adaptive_beam, &best_elem);
-
-  // KALDI_DECODER_LOG << tok_cnt << " tokens active.";
 
   // This makes sure the hash is always big enough.
   PossiblyResizeHash(tok_cnt);
@@ -193,15 +207,17 @@ double FasterDecoder::ProcessEmitting(DecodableInterface *decodable) {
   // the tokens are now owned here, in last_toks, and the hash is empty.
   // 'owned' is a complex thing here; the point is we need to call TokenDelete
   // on each elem 'e' to let toks_ know we're done with them.
-  for (Elem *e = last_toks, *e_tail; e != nullptr;
-       e = e_tail) {  // loop this way
+  Elem *e_tail = nullptr;
+  for (Elem *e = last_toks; e != nullptr; e = e_tail) {  // loop this way
     // n++;
     // because we delete "e" as we go.
     StateId state = e->key;
     Token *tok = e->val;
     if (tok->cost_ < weight_cutoff) {  // not pruned.
       // np++;
-      KALDI_DECODER_ASSERT(state == tok->arc_.nextstate);
+      if (state != tok->arc_.nextstate) {
+        throw std::runtime_error("FasterDecoder::ProcessEmitting: bad token");
+      }
       for (fst::ArcIterator<fst::Fst<Arc>> aiter(fst_, state); !aiter.Done();
            aiter.Next()) {
         const Arc &arc = aiter.Value();
@@ -401,7 +417,9 @@ bool FasterDecoder::GetBestPath(fst::MutableFst<fst::LatticeArc> *fst_out,
     arcs_reverse.push_back(l_arc);
   }
 
-  KALDI_DECODER_ASSERT(arcs_reverse.back().nextstate == fst_.Start());
+  if (arcs_reverse.back().nextstate != fst_.Start()) {
+    throw std::runtime_error("FasterDecoder::GetBestPath: bad traceback");
+  }
 
   arcs_reverse.pop_back();  // that was a "fake" token... gives no info.
 

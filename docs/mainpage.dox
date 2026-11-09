@@ -1,0 +1,8 @@
+/**
+ * @mainpage kaldi-decoder C++ API
+ *
+ * Kaldi-compatible decoding (lattice decoders, decodables, utterance-level
+ * alignment/decoding wrappers).  Headers live in kaldi-decoder/csrc/.
+ *
+ * See also the Python API documentation.
+ */

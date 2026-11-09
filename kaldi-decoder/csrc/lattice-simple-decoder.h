@@ -9,6 +9,8 @@
 // kaldi/src/decoder/lattice-simple-decoder.h
 #ifndef KALDI_DECODER_CSRC_LATTICE_SIMPLE_DECODER_H_
 #define KALDI_DECODER_CSRC_LATTICE_SIMPLE_DECODER_H_
+#include <limits>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -16,8 +18,19 @@
 #include "fst/fst.h"
 #include "fst/fstlib.h"
 #include "kaldi-decoder/csrc/decodable-itf.h"
-#include "kaldi-decoder/csrc/log.h"
 #include "kaldifst/csrc/lattice-weight.h"
+
+/**
+   @file lattice-simple-decoder.h
+   @brief Lattice-generating Viterbi decoder (kaldi's LatticeSimpleDecoder).
+
+   This file is copied/modified from
+   @kfile{src/decoder/lattice-simple-decoder.h}.  Like SimpleDecoder but keeps
+   near-best alternative paths (within lattice_beam) as a lattice via per-token
+   forward links.
+
+   @see LatticeFasterDecoderTpl, DecodableInterface.
+*/
 
 namespace kaldi_decoder {
 
@@ -34,11 +47,10 @@ struct LatticeSimpleDecoderConfig {
                       // the algorithm that prunes the tokens as we go.
   // fst::DeterminizeLatticePhonePrunedOptions det_opts;
 
-  LatticeSimpleDecoderConfig(float beam = 16.0, float lattice_beam = 10.0,
-                             int32_t prune_interval = 25,
-                             bool determinize_lattice = true,
-                             bool prune_lattice = true, float beam_ratio = 0.9,
-                             float prune_scale = 0.1)
+  explicit LatticeSimpleDecoderConfig(
+      float beam = 16.0, float lattice_beam = 10.0, int32_t prune_interval = 25,
+      bool determinize_lattice = true, bool prune_lattice = true,
+      float beam_ratio = 0.9, float prune_scale = 0.1)
       : beam(beam),
         lattice_beam(lattice_beam),
         prune_interval(prune_interval),
@@ -61,8 +73,9 @@ struct LatticeSimpleDecoderConfig {
   }
 #endif
   void Check() const {
-    KALDI_DECODER_ASSERT(beam > 0.0 && lattice_beam > 0.0 &&
-                         prune_interval > 0);
+    if (!(beam > 0.0 && lattice_beam > 0.0 && prune_interval > 0)) {
+      throw std::runtime_error("LatticeSimpleDecoderConfig: invalid options");
+    }
   }
 
   std::string ToString() const {
@@ -84,7 +97,7 @@ struct LatticeSimpleDecoderConfig {
 };
 
 /** Simplest possible decoder, included largely for didactic purposes and as a
-    means to debug more highly optimized decoders.  See \ref decoders_simple
+    means to debug more highly optimized decoders.  See kaldi's doc/decoders.dox
     for more information.
  */
 class LatticeSimpleDecoder {
@@ -105,6 +118,8 @@ class LatticeSimpleDecoder {
   /// intend to call AdvanceDecoding().  If you call Decode(), you don't need
   /// to call this.  You can call InitDecoding if you have already decoded an
   /// utterance and want to start with a new utterance.
+  /// @brief Reset for a new utterance.
+  /// @see Decode, AdvanceDecoding
   void InitDecoding();
 
   /// This function may be optionally called after AdvanceDecoding(), when you
@@ -127,6 +142,11 @@ class LatticeSimpleDecoder {
   // If "use_final_probs" is true AND we reached the final-state
   // of the graph then it will include those as final-probs, else
   // it will treat all final-probs as one.
+  /// @brief 1-best traceback as a linear Lattice FST.
+  /// @param [out] lat             The best path.
+  /// @param [in]  use_final_probs Account for final-probs (default true).
+  /// @return True if the output lattice was nonempty.
+  /// @see GetRawLattice, ReachedFinal
   bool GetBestPath(fst::Lattice *lat, bool use_final_probs = true) const;
 
   // Outputs an FST corresponding to the raw, state-level
@@ -135,9 +155,26 @@ class LatticeSimpleDecoder {
   // If "use_final_probs" is true AND we reached the final-state
   // of the graph then it will include those as final-probs, else
   // it will treat all final-probs as one.
+  /// @brief The raw, state-level traceback lattice.
+  ///
+  /// Contains the alternative paths retained within @c lattice_beam;
+  /// graph costs in Value1, acoustic costs in Value2.
+  /// @param [out] lat             The raw lattice (topologically sorted).
+  /// @param [in]  use_final_probs Account for final-probs (default true).
+  /// @return True if the output lattice was nonempty.
+  /// @see GetBestPath
   bool GetRawLattice(fst::Lattice *lat, bool use_final_probs = true) const;
 
+  /// Destructor; frees the internal tokens (not the graph).
   ~LatticeSimpleDecoder() { ClearActiveTokens(); }
+
+  /// Returns true if a token reached a final state on the final frame, i.e.
+  /// a complete path through the graph exists (this is kaldi's
+  /// LatticeSimpleDecoder::ReachedFinal(); it checks whether
+  /// FinalRelativeCost() is finite).
+  bool ReachedFinal() const {
+    return FinalRelativeCost() != std::numeric_limits<float>::infinity();
+  }
 
   /// FinalRelativeCost() serves the same purpose as ReachedFinal(), but gives
   /// more information.  It returns the difference between the best (final-cost
@@ -149,12 +186,18 @@ class LatticeSimpleDecoder {
   /// reasonable likelihood.
   float FinalRelativeCost() const;
 
+  /// @return The current configuration.
   const LatticeSimpleDecoderConfig &GetOptions() const { return config_; }
 
+  /// @return The number of frames already decoded.
   int32_t NumFramesDecoded() const { return active_toks_.size() - 1; }
 
   // Returns true if any kind of traceback is available (not necessarily from
   // a final state).
+  /// @brief Decode to the end of the decodable's frames.
+  /// @param [in] decodable  Scores; must outlive the decode.
+  /// @return True if any traceback is available.
+  /// @see GetBestPath, GetRawLattice
   bool Decode(DecodableInterface *decodable);
 
  private:
@@ -162,10 +205,10 @@ class LatticeSimpleDecoder {
   // ForwardLinks are the links from a token to a token on the next frame.
   // or sometimes on the current frame (for input-epsilon links).
   struct ForwardLink {
-    Token *next_tok;      // the next token [or NULL if represents final-state]
-    Label ilabel;         // ilabel on link.
-    Label olabel;         // olabel on link.
-    float graph_cost;     // graph cost of traversing link (contains LM, etc.)
+    Token *next_tok;   // the next token [or nullptr if represents final-state]
+    Label ilabel;      // ilabel on link.
+    Label olabel;      // olabel on link.
+    float graph_cost;  // graph cost of traversing link (contains LM, etc.)
     float acoustic_cost;  // acoustic cost (pre-scaled) of traversing link
     ForwardLink *next;    // next in singly-linked list of forward links from a
                           // token.
@@ -206,7 +249,7 @@ class LatticeSimpleDecoder {
 
     void DeleteForwardLinks() {
       ForwardLink *l = links;
-      ForwardLink *m;
+      ForwardLink *m = nullptr;
 
       while (l != nullptr) {
         m = l->next;
@@ -220,13 +263,10 @@ class LatticeSimpleDecoder {
   // head and tail of per-frame list of Tokens (list is in topological order),
   // and something saying whether we ever pruned it using PruneForwardLinks.
   struct TokenList {
-    Token *toks;
-    bool must_prune_forward_links;
-    bool must_prune_tokens;
-    TokenList()
-        : toks(nullptr),
-          must_prune_forward_links(true),
-          must_prune_tokens(true) {}
+    Token *toks = nullptr;
+    bool must_prune_forward_links = true;
+    bool must_prune_tokens = true;
+    TokenList() = default;
   };
 
   // FindOrAddToken either locates a token in cur_toks_, or if necessary inserts
@@ -235,7 +275,7 @@ class LatticeSimpleDecoder {
   // linked list of tokens active on this frame (whose head is at
   // active_toks_[frame]).
   //
-  // Returns the Token pointer.  Sets "changed" (if non-NULL) to true
+  // Returns the Token pointer.  Sets "changed" (if non-nullptr) to true
   // if the token was newly created or the cost changed.
   inline Token *FindOrAddToken(StateId state, int32_t frame_plus_one,
                                float tot_cost, bool emitting, bool *changed);
@@ -261,16 +301,16 @@ class LatticeSimpleDecoder {
   void PruneForwardLinksFinal();
 
   // This function computes the final-costs for tokens active on the final
-  // frame.  It outputs to final-costs, if non-NULL, a map from the Token*
+  // frame.  It outputs to final-costs, if non-nullptr, a map from the Token*
   // pointer to the final-prob of the corresponding state, or zero for all
-  // states if none were final.  It outputs to final_relative_cost, if non-NULL,
-  // the difference between the best forward-cost including the final-prob cost,
-  // and the best forward-cost without including the final-prob cost (this will
-  // usually be positive), or infinity if there were no final-probs.  It outputs
-  // to final_best_cost, if non-NULL, the lowest for any token t active on the
-  // final frame, of t + final-cost[t], where final-cost[t] is the final-cost
-  // in the graph of the state corresponding to token t, or zero if there
-  // were no final-probs active on the final frame.
+  // states if none were final.  It outputs to final_relative_cost, if
+  // non-nullptr, the difference between the best forward-cost including the
+  // final-prob cost, and the best forward-cost without including the final-prob
+  // cost (this will usually be positive), or infinity if there were no
+  // final-probs.  It outputs to final_best_cost, if non-nullptr, the lowest for
+  // any token t active on the final frame, of t + final-cost[t], where
+  // final-cost[t] is the final-cost in the graph of the state corresponding to
+  // token t, or zero if there were no final-probs active on the final frame.
   // You cannot call this after FinalizeDecoding() has been called; in that
   // case you should get the answer from class-member variables.
   void ComputeFinalCosts(std::unordered_map<Token *, float> *final_costs,
@@ -297,8 +337,8 @@ class LatticeSimpleDecoder {
  private:
   const fst::Fst<fst::StdArc> &fst_;
   LatticeSimpleDecoderConfig config_;
-  int32_t num_toks_;  // current total #toks allocated...
-  bool warned_;
+  int32_t num_toks_ = 0;  // current total #toks allocated...
+  bool warned_ = false;
 
   std::unordered_map<StateId, Token *> cur_toks_;
   std::unordered_map<StateId, Token *> prev_toks_;
@@ -311,12 +351,12 @@ class LatticeSimpleDecoder {
   /// FinalizeDecoding() calls PruneTokensForFrame() for the final frame, some
   /// of the tokens on the last frame are freed, so we free the list from
   /// cur_toks_ to avoid having dangling pointers hanging around.
-  bool decoding_finalized_;
+  bool decoding_finalized_ = false;
   /// For the meaning of the next 3 variables, see the comment for
   /// decoding_finalized_ above., and ComputeFinalCosts().
   std::unordered_map<Token *, float> final_costs_;
-  float final_relative_cost_;
-  float final_best_cost_;
+  float final_relative_cost_ = 0.0f;
+  float final_best_cost_ = 0.0f;
 };
 
 }  // namespace kaldi_decoder

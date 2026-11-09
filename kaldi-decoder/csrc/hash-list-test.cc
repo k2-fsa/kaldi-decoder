@@ -9,14 +9,14 @@
 
 #include "kaldi-decoder/csrc/hash-list.h"
 
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <map>  // for baseline.
 
 // #include "kaldi-decoder/csrc/kaldi-math.h"
 #include "gtest/gtest.h"
 
 namespace kaldi_decoder {
+namespace {
 
 template <class Int, class T>
 void TestHashList() {
@@ -47,7 +47,8 @@ void TestHashList() {
     }
     std::swap(m1, m2);
 
-    Elem *h = hash.Clear(), *tmp;
+    Elem *h = hash.Clear();
+    Elem *tmp = nullptr;
 
     // note, SetSize is relatively cheap
     hash.SetSize(100 + rand() % 100);  // NOLINT
@@ -64,7 +65,7 @@ void TestHashList() {
     const Elem *list = hash.GetList();
     size_t count = 0;
     for (; list != nullptr; list = list->tail, count++) {
-      KALDI_DECODER_ASSERT(m1[list->key] == list->val);
+      EXPECT_EQ(m1[list->key], list->val);
     }
 
     for (size_t j = 0; j < 10; j++) {
@@ -74,20 +75,25 @@ void TestHashList() {
       if (found_m1) m1[key];
 
       Elem *e = hash.Find(key);
-      KALDI_DECODER_ASSERT((e != nullptr) == found_m1);
+      EXPECT_EQ(e != nullptr, found_m1);
 
-      if (found_m1) KALDI_DECODER_ASSERT(m1[key] == e->val);
+      if (found_m1) {
+        EXPECT_EQ(m1[key], e->val);
+      }
     }
 
-    KALDI_DECODER_ASSERT(m1.size() == count);
+    EXPECT_EQ(m1.size(), count);
   }
 
-  Elem *h = hash.Clear(), *tmp;
+  Elem *h = hash.Clear();
+  Elem *tmp = nullptr;
   for (; h != nullptr; h = tmp) {
     tmp = h->tail;
     hash.Delete(h);  // think of this like calling delete.
   }
 }
+
+}  // namespace
 
 TEST(HashList, Test) {
   for (size_t i = 0; i < 3; i++) {

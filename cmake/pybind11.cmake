@@ -1,4 +1,11 @@
+include_guard(GLOBAL)
+
 function(download_pybind11)
+  # Already provided by a parent project (e.g. kaldi-hmm-gmm's ./cmake).
+  if(TARGET pybind11::module)
+    return()
+  endif()
+
   include(FetchContent)
 
   set(pybind11_URL  "https://github.com/pybind/pybind11/archive/refs/tags/v3.0.0.tar.gz")
@@ -24,20 +31,16 @@ function(download_pybind11)
     endif()
   endforeach()
 
+  message(STATUS "Downloading pybind11 from ${pybind11_URL}")
   FetchContent_Declare(pybind11
+    EXCLUDE_FROM_ALL
     URL
       ${pybind11_URL}
       ${pybind11_URL2}
     URL_HASH          ${pybind11_HASH}
   )
-
-  FetchContent_GetProperties(pybind11)
-  if(NOT pybind11_POPULATED)
-    message(STATUS "Downloading pybind11 from ${pybind11_URL}")
-    FetchContent_Populate(pybind11)
-  endif()
+  FetchContent_MakeAvailable(pybind11)
   message(STATUS "pybind11 is downloaded to ${pybind11_SOURCE_DIR}")
-  add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR} EXCLUDE_FROM_ALL)
 endfunction()
 
 download_pybind11()

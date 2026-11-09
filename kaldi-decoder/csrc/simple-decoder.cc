@@ -8,10 +8,11 @@
 
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
-#include "kaldi-decoder/csrc/log.h"
+#include "kaldi-decoder/csrc/macros.h"
 #include "kaldifst/csrc/remove-eps-local.h"
 
 namespace kaldi_decoder {
@@ -33,7 +34,9 @@ void SimpleDecoder::InitDecoding() {
   ClearToks(prev_toks_);
   // initialize decoding:
   StateId start_state = fst_.Start();
-  KALDI_DECODER_ASSERT(start_state != fst::kNoStateId);
+  if (start_state == fst::kNoStateId) {
+    throw std::runtime_error("SimpleDecoder::InitDecoding: FST has no start");
+  }
   StdArc dummy_arc(0, 0, StdWeight::One(), start_state);
   cur_toks_[start_state] = new Token(dummy_arc, 0.0, nullptr);
   num_frames_decoded_ = 0;
@@ -42,14 +45,19 @@ void SimpleDecoder::InitDecoding() {
 
 void SimpleDecoder::AdvanceDecoding(DecodableInterface *decodable,
                                     int32_t max_num_frames /*= -1*/) {
-  KALDI_DECODER_ASSERT(num_frames_decoded_ >= 0 &&
-                       "You must call InitDecoding() before AdvanceDecoding()");
+  if (num_frames_decoded_ < 0) {
+    throw std::runtime_error(
+        "SimpleDecoder::AdvanceDecoding: call InitDecoding() first");
+  }
   int32_t num_frames_ready = decodable->NumFramesReady();
   // num_frames_ready must be >= num_frames_decoded, or else
   // the number of frames ready must have decreased (which doesn't
   // make sense) or the decodable object changed between calls
   // (which isn't allowed).
-  KALDI_DECODER_ASSERT(num_frames_ready >= num_frames_decoded_);
+  if (num_frames_ready < num_frames_decoded_) {
+    throw std::runtime_error(
+        "SimpleDecoder::AdvanceDecoding: num_frames_ready decreased");
+  }
   int32_t target_frames_decoded = num_frames_ready;
   if (max_num_frames >= 0) {
     target_frames_decoded =
@@ -67,10 +75,11 @@ void SimpleDecoder::AdvanceDecoding(DecodableInterface *decodable,
 }
 
 bool SimpleDecoder::ReachedFinal() const {
-  for (auto iter = cur_toks_.begin(); iter != cur_toks_.end(); ++iter) {
-    if (iter->second->cost_ != std::numeric_limits<float>::infinity() &&
-        fst_.Final(iter->first) != StdWeight::Zero())
+  for (const auto &kv : cur_toks_) {
+    if (kv.second->cost_ != std::numeric_limits<float>::infinity() &&
+        fst_.Final(kv.first) != StdWeight::Zero()) {
       return true;
+    }
   }
   return false;
 }
@@ -80,19 +89,19 @@ float SimpleDecoder::FinalRelativeCost() const {
   // pruning failure), return infinity.
   double infinity = std::numeric_limits<double>::infinity();
   if (cur_toks_.empty()) return infinity;
-  double best_cost = infinity, best_cost_with_final = infinity;
-  for (auto iter = cur_toks_.begin(); iter != cur_toks_.end(); ++iter) {
+  double best_cost = infinity;
+  double best_cost_with_final = infinity;
+  for (const auto &kv : cur_toks_) {
     // Note: Plus is taking the minimum cost, since we're in the tropical
     // semiring.
-    best_cost = std::min(best_cost, iter->second->cost_);
-    best_cost_with_final =
-        std::min(best_cost_with_final,
-                 iter->second->cost_ + fst_.Final(iter->first).Value());
+    best_cost = std::min(best_cost, kv.second->cost_);
+    best_cost_with_final = std::min(
+        best_cost_with_final, kv.second->cost_ + fst_.Final(kv.first).Value());
   }
   float extra_cost = best_cost_with_final - best_cost;
   if (extra_cost != extra_cost) {  // NaN.  This shouldn't happen; it indicates
                                    // some kind of error, most likely.
-    KALDI_DECODER_WARN << "Found NaN (likely search failure in decoding)";
+    KALDI_DECODER_LOGE("Found NaN (likely search failure in decoding)");
     return infinity;
   }
   // Note: extra_cost will be infinity if no states were final.
@@ -107,17 +116,19 @@ bool SimpleDecoder::GetBestPath(fst::Lattice *fst_out,
   Token *best_tok = nullptr;
   bool is_final = ReachedFinal();
   if (!is_final) {
-    for (auto iter = cur_toks_.begin(); iter != cur_toks_.end(); ++iter)
-      if (best_tok == nullptr || *best_tok < *(iter->second))
-        best_tok = iter->second;
+    for (const auto &kv : cur_toks_) {
+      if (best_tok == nullptr || *best_tok < *(kv.second)) {
+        best_tok = kv.second;
+      }
+    }
   } else {
     double infinity = std::numeric_limits<double>::infinity(),
            best_cost = infinity;
-    for (auto iter = cur_toks_.begin(); iter != cur_toks_.end(); ++iter) {
-      double this_cost = iter->second->cost_ + fst_.Final(iter->first).Value();
+    for (const auto &kv : cur_toks_) {
+      double this_cost = kv.second->cost_ + fst_.Final(kv.first).Value();
       if (this_cost != infinity && this_cost < best_cost) {
         best_cost = this_cost;
-        best_tok = iter->second;
+        best_tok = kv.second;
       }
     }
   }
@@ -126,7 +137,9 @@ bool SimpleDecoder::GetBestPath(fst::Lattice *fst_out,
   std::vector<fst::LatticeArc> arcs_reverse;  // arcs in reverse order.
   for (Token *tok = best_tok; tok != nullptr; tok = tok->prev_)
     arcs_reverse.push_back(tok->arc_);
-  KALDI_DECODER_ASSERT(arcs_reverse.back().nextstate == fst_.Start());
+  if (arcs_reverse.back().nextstate != fst_.Start()) {
+    throw std::runtime_error("SimpleDecoder::GetBestPath: bad traceback");
+  }
   arcs_reverse.pop_back();  // that was a "fake" token... gives no info.
 
   StateId cur_state = fst_out->AddState();
@@ -152,10 +165,12 @@ void SimpleDecoder::ProcessEmitting(DecodableInterface *decodable) {
   // Processes emitting arcs for one frame.  Propagates from
   // prev_toks_ to cur_toks_.
   double cutoff = std::numeric_limits<float>::infinity();
-  for (auto iter = prev_toks_.begin(); iter != prev_toks_.end(); ++iter) {
-    StateId state = iter->first;
-    Token *tok = iter->second;
-    KALDI_DECODER_ASSERT(state == tok->arc_.nextstate);
+  for (const auto &kv : prev_toks_) {
+    StateId state = kv.first;
+    Token *tok = kv.second;
+    if (state != tok->arc_.nextstate) {
+      throw std::runtime_error("SimpleDecoder::ProcessEmitting: bad token");
+    }
     for (fst::ArcIterator<fst::Fst<StdArc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
       const StdArc &arc = aiter.Value();
@@ -198,9 +213,9 @@ void SimpleDecoder::ProcessNonemitting() {
   std::vector<StateId> queue;
   double infinity = std::numeric_limits<double>::infinity();
   double best_cost = infinity;
-  for (auto iter = cur_toks_.begin(); iter != cur_toks_.end(); ++iter) {
-    queue.push_back(iter->first);
-    best_cost = std::min(best_cost, iter->second->cost_);
+  for (const auto &kv : cur_toks_) {
+    queue.push_back(kv.first);
+    best_cost = std::min(best_cost, kv.second->cost_);
   }
   double cutoff = best_cost + beam_;
 
@@ -208,7 +223,9 @@ void SimpleDecoder::ProcessNonemitting() {
     StateId state = queue.back();
     queue.pop_back();
     Token *tok = cur_toks_[state];
-    KALDI_DECODER_ASSERT(tok != nullptr && state == tok->arc_.nextstate);
+    if (tok == nullptr || state != tok->arc_.nextstate) {
+      throw std::runtime_error("SimpleDecoder::ProcessNonemitting: bad token");
+    }
     for (fst::ArcIterator<fst::Fst<StdArc>> aiter(fst_, state); !aiter.Done();
          aiter.Next()) {
       const StdArc &arc = aiter.Value();
@@ -242,8 +259,8 @@ void SimpleDecoder::ProcessNonemitting() {
 
 // static
 void SimpleDecoder::ClearToks(std::unordered_map<StateId, Token *> &toks) {
-  for (auto iter = toks.begin(); iter != toks.end(); ++iter) {
-    Token::TokenDelete(iter->second);
+  for (auto &kv : toks) {
+    Token::TokenDelete(kv.second);
   }
   toks.clear();
 }
@@ -252,31 +269,28 @@ void SimpleDecoder::ClearToks(std::unordered_map<StateId, Token *> &toks) {
 void SimpleDecoder::PruneToks(float beam,
                               std::unordered_map<StateId, Token *> *toks) {
   if (toks->empty()) {
-    KALDI_DECODER_LOG << "No tokens to prune.\n";
     return;
   }
   double best_cost = std::numeric_limits<double>::infinity();
-  for (auto iter = toks->begin(); iter != toks->end(); ++iter) {
-    best_cost = std::min(best_cost, iter->second->cost_);
+  for (const auto &kv : *toks) {
+    best_cost = std::min(best_cost, kv.second->cost_);
   }
 
   std::vector<StateId> retained;
   double cutoff = best_cost + beam;
-  for (auto iter = toks->begin(); iter != toks->end(); ++iter) {
-    if (iter->second->cost_ < cutoff) {
-      retained.push_back(iter->first);
+  for (auto &kv : *toks) {
+    if (kv.second->cost_ < cutoff) {
+      retained.push_back(kv.first);
     } else {
-      Token::TokenDelete(iter->second);
+      Token::TokenDelete(kv.second);
     }
   }
 
   std::unordered_map<StateId, Token *> tmp;
-  for (size_t i = 0; i < retained.size(); i++) {
-    tmp[retained[i]] = (*toks)[retained[i]];
+  for (StateId s : retained) {
+    tmp[s] = (*toks)[s];
   }
 
-  KALDI_DECODER_LOG << "Pruned from " << toks->size() << "  to "
-                    << (retained.size()) << " toks.\n";
   tmp.swap(*toks);
 }
 

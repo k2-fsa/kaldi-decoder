@@ -44,7 +44,7 @@ class HashList {
 
   /// Constructor takes no arguments.
   /// Call SetSize to inform it of the likely size.
-  HashList();
+  HashList() = default;
 
   /// Clears the hash and gives the head of the current list to the user;
   /// ownership is transferred to the user (the user must call Delete()
@@ -68,9 +68,9 @@ class HashList {
   inline Elem *New();
 
   /// Find tries to find this element in the current list using the hashtable.
-  /// It returns NULL if not present.  The Elem it returns is not owned by the
-  /// user, it is part of the internal list owned by this object, but the user
-  /// is free to modify the "val" element.
+  /// It returns nullptr if not present.  The Elem it returns is not owned by
+  /// the user, it is part of the internal list owned by this object, but the
+  /// user is free to modify the "val" element.
   inline Elem *Find(I key);
 
   /// Insert inserts a new element into the hashtable/stored list.
@@ -103,20 +103,23 @@ class HashList {
 
  private:
   struct HashBucket {
-    size_t prev_bucket;  // index to next bucket (-1 if list tail).  Note:
+    size_t prev_bucket = 0;  // index to next bucket (-1 if list tail).  Note:
     // list of buckets goes in opposite direction to list of Elems.
-    Elem *last_elem;  // pointer to last element in this bucket (NULL if empty)
+    Elem *
+        last_elem;  // pointer to last element in this bucket (nullptr if empty)
     inline HashBucket(size_t i, Elem *e) : prev_bucket(i), last_elem(e) {}
   };
 
-  Elem *list_head_;          // head of currently stored list.
-  size_t bucket_list_tail_;  // tail of list of active hash buckets.
+  Elem *list_head_ = nullptr;  // head of currently stored list.
+  size_t bucket_list_tail_ =
+      static_cast<size_t>(-1);  // tail of list of active hash buckets.
 
-  size_t hash_size_;  // number of hash buckets.
+  size_t hash_size_ = 0;  // number of hash buckets.
 
   std::vector<HashBucket> buckets_;
 
-  Elem *freed_head_;  // head of list of currently freed elements. [ready for
+  Elem *freed_head_ =
+      nullptr;  // head of list of currently freed elements. [ready for
   // allocation]
 
   std::vector<Elem *> allocated_;  // list of allocated blocks.

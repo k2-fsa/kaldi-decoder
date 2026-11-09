@@ -77,11 +77,10 @@ def main() -> int:
     options.beam = 8.0
     assert "beam=8" in str(options), f"beam setter did not take: {options}"
 
-    # Both of these must stay alive in locals for as long as `decoder` is in
-    # use. FasterDecoder keeps a reference to the FST without owning it, and
-    # DecodableInterface is a pybind11 trampoline -- handing either one in as a
-    # temporary lets it be collected while C++ still points at it, which
-    # segfaults inside init_decoding()/advance_decoding().
+    # The decoder holds a py::keep_alive reference to the FST, so a temporary
+    # graph would also be safe; keeping them in locals here is just tidy.  The
+    # decodable must stay alive during the decode calls (it is a pybind11
+    # trampoline).
     graph = build_h()
     decodable = FakeDecodable()
 

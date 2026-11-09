@@ -38,7 +38,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10"]
+        # sphinx==9.1.1 (docs/requirements.txt) needs Python >= 3.12
+        python-version: ["3.12"]
     steps:
       # refer to https://github.com/actions/checkout
       - uses: actions/checkout@v7
@@ -64,6 +65,12 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install .
+
+      - name: Install doxygen
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen
 
       - name: Build doc
         shell: bash

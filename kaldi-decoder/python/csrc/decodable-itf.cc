@@ -43,13 +43,44 @@ class PyDecodableInterface : public DecodableInterface {
 void PybindDecodableItf(py::module *m) {
   using PyClass = DecodableInterface;
 
-  py::class_<PyClass, PyDecodableInterface>(*m, "DecodableInterface")
-      .def(py::init<>())
+  auto cls = py::class_<PyClass, PyDecodableInterface>(
+      *m, "DecodableInterface",
+      R"doc(Scoring interface every decoder consumes.
+
+This is kaldi's `DecodableInterface
+<https://github.com/kaldi-asr/kaldi/blob/master/src/itf/decodable-itf.h>`_.
+It answers one question: *how likely is transition-id ``index`` at frame
+``frame``?*  Implement it in Python to plug any acoustic model into the
+decoders (a pybind11 trampoline keeps virtual dispatch on the Python side).
+
+Indices are **one-based** (openfst convention, 0 is epsilon).
+
+**Lifetime:** decoders borrow the decodable without owning it -- keep the
+Python object alive for the whole decode.
+
+.. seealso:: :class:`DecodableMatrixScaledMapped`
+   For the fast matrix-backed implementation.)doc");
+  cls.def(py::init<>(),
+          R"doc(Construct a decodable; implement the four methods below.)doc")
       .def("log_likelihood", &PyClass::LogLikelihood, py::arg("frame"),
-           py::arg("index"))
-      .def("is_last_frame", &PyClass::IsLastFrame, py::arg("frame"))
-      .def("num_frames_ready", &PyClass::NumFramesReady)
-      .def("num_indices", &PyClass::NumIndices);
+           py::arg("index"),
+           R"doc(Acoustic log-likelihood of transition-id ``index`` at frame
+``frame`` (higher is better).
+
+:param frame: Frame index, 0-based, ``frame < num_frames_ready()``.
+:param index: Transition-id, 1-based, ``index <= num_indices()``.
+:return: The log-likelihood.)doc")
+      .def("is_last_frame", &PyClass::IsLastFrame, py::arg("frame"),
+           R"doc(Whether ``frame`` is the last frame with scores available.
+
+For streaming decodables this is only true once the input is finished.)doc")
+      .def(
+          "num_frames_ready", &PyClass::NumFramesReady,
+          R"doc(Number of frames with scores available; may grow over time.)doc")
+      .def("num_indices", &PyClass::NumIndices,
+           R"doc(Number of valid indices (transition-ids); indices are
+1-based.)doc");
+  cls.attr("__module__") = "kaldi_decoder";
 }
 
 }  // namespace kaldi_decoder

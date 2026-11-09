@@ -1,66 +1,24 @@
 Python API
 ==========
 
-The Python bindings live in the :mod:`kaldi_decoder` module.
+The Python bindings live in the :mod:`kaldi_decoder` module (the extension is
+``kaldi_decoder/lib/_kaldi_decoder``).  Building graphs needs the
+`kaldifst <https://github.com/k2-fsa/kaldifst>`_ package; kaldi-decoder itself
+does not construct FSTs.
 
-.. code-block:: python
+Each page below has a usage example, the equivalent kaldi commands, a
+kaldi-flag mapping table, and the full API reference.
 
-   import kaldi_decoder
+.. toctree::
+   :maxdepth: 2
 
-.. currentmodule:: kaldi_decoder
-
-DecodableInterface
-------------------
-
-.. autoclass:: DecodableInterface
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-DecodableCtc
-------------
-
-.. autoclass:: DecodableCtc
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-FasterDecoderOptions
---------------------
-
-.. autoclass:: FasterDecoderOptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-FasterDecoder
--------------
-
-.. autoclass:: FasterDecoder
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-LatticeSimpleDecoderConfig
---------------------------
-
-.. autoclass:: LatticeSimpleDecoderConfig
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-LatticeSimpleDecoder
---------------------
-
-.. autoclass:: LatticeSimpleDecoder
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-SimpleDecoder
--------------
-
-.. autoclass:: SimpleDecoder
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   decodable_itf
+   decodable_ctc
+   decodable_matrix
+   transition_information
+   simple_decoder
+   faster_decoder
+   lattice_simple_decoder
+   lattice_faster_decoder
+   decoder_wrappers
+   reference

@@ -25,12 +25,31 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, macos-15-intel]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+        # 3.8/3.9 skipped: ubuntu-26.04 images no longer ship those
+        # interpreters, and cp38/39 kaldifst wheels predate the pybind11
+        # internals used here (cross-module FST returns fail).
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+        # numpy 1.x/2.x are both supported; the main matrix runs 2.x and
+        # the include below adds one 1.x cell per OS (numpy<2 has no
+        # wheels for Python >= 3.13, hence 3.12).
+        numpy: ["2"]
+        include:
+          - os: macos-latest
+            python-version: "3.12"
+            numpy: "1"
+          - os: macos-15-intel
+            python-version: "3.12"
+            numpy: "1"
 
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.24
+        with:
+          key: ${{ matrix.os }}-${{ matrix.python-version }}
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v7
@@ -40,9 +59,17 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install -U pip
+          python3 -m pip install "kaldifst>=1.9.0" "numpy~=${{ matrix.numpy }}.0"
+
       - name: Configure CMake
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           mkdir build
           cd build
           cmake -D CMAKE_BUILD_TYPE=Release -DKALDI_DECODER_ENABLE_TESTS=ON ..

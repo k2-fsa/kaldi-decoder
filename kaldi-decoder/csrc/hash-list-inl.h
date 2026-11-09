@@ -12,22 +12,19 @@
 
 // Do not include this file directly.  It is included by fast-hash.h
 
-namespace kaldi_decoder {
+#include <stdexcept>
 
-template <class I, class T>
-HashList<I, T>::HashList() {
-  list_head_ = nullptr;
-  bucket_list_tail_ = static_cast<size_t>(-1);  // invalid.
-  hash_size_ = 0;
-  freed_head_ = nullptr;
-}
+#include "kaldi-decoder/csrc/macros.h"
+
+namespace kaldi_decoder {
 
 template <class I, class T>
 void HashList<I, T>::SetSize(size_t size) {
   hash_size_ = size;
-  KALDI_DECODER_ASSERT(list_head_ == nullptr &&
-                       bucket_list_tail_ ==
-                           static_cast<size_t>(-1));  // make sure empty.
+  // make sure empty.
+  if (list_head_ != nullptr || bucket_list_tail_ != static_cast<size_t>(-1)) {
+    throw std::runtime_error("HashList::SetSize: not empty");
+  }
 
   if (size > buckets_.size()) {
     buckets_.resize(size, HashBucket(0, nullptr));
@@ -105,22 +102,23 @@ template <class I, class T>
 HashList<I, T>::~HashList() {
   // First test whether we had any memory leak within the
   // HashList, i.e. things for which the user did not call Delete().
-  size_t num_in_list = 0, num_allocated = 0;
+  size_t num_in_list = 0;
+  size_t num_allocated = 0;
 
   for (Elem *e = freed_head_; e != nullptr; e = e->tail) {
     num_in_list++;
   }
 
-  for (size_t i = 0; i < allocated_.size(); i++) {
+  for (auto *blk : allocated_) {
     num_allocated += allocate_block_size_;
-    delete[] allocated_[i];
+    delete[] blk;
   }
 
   if (num_in_list != num_allocated) {
-    KALDI_DECODER_WARN << "Possible memory leak: " << num_in_list
-                       << " != " << num_allocated
-                       << ": you might have forgotten to call Delete on "
-                       << "some Elems";
+    KALDI_DECODER_LOGE(
+        "Possible memory leak: %zu != %zu: you might have forgotten to call "
+        "Delete on some Elems",
+        num_in_list, num_allocated);
   }
 }
 
@@ -152,7 +150,9 @@ inline typename HashList<I, T>::Elem *HashList<I, T>::Insert(I key, T val) {
     // opposite directions).
     if (bucket_list_tail_ == static_cast<size_t>(-1)) {
       // list was empty so this is the first elem.
-      KALDI_DECODER_ASSERT(list_head_ == nullptr);
+      if (list_head_ != nullptr) {
+        throw std::runtime_error("HashList::Insert: list_head_ != nullptr");
+      }
       list_head_ = elem;
     } else {
       // link in to the chain of Elems
@@ -181,7 +181,10 @@ void HashList<I, T>::InsertMore(I key, T val) {
   elem->val = val;
 
   // assume one element is already here
-  KALDI_DECODER_ASSERT(bucket.last_elem != nullptr);
+  if (bucket.last_elem == nullptr) {
+    throw std::runtime_error(
+        "HashList::InsertMore: bucket.last_elem == nullptr");
+  }
 
   if (bucket.last_elem->key == key) {  // standard behavior: add as last element
     elem->tail = bucket.last_elem->tail;
@@ -197,7 +200,10 @@ void HashList<I, T>::InsertMore(I key, T val) {
     e = e->tail;
   }
 
-  KALDI_DECODER_ASSERT(e->key == key);  // not found? - should not happen
+  // not found? - should not happen
+  if (e->key != key) {
+    throw std::runtime_error("HashList::InsertMore: key not found");
+  }
   elem->tail = e->tail;
   e->tail = elem;
 }
