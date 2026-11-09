@@ -1,0 +1,209 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forced alignment &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6c02275b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Streaming and chunked input" href="streaming.html" />
+    <link rel="prev" title="Decoding an utterance" href="decoding.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            kaldi-decoder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../pdf.html">Download pdf</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/index.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="decoding.html">Decoding an utterance</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Forced alignment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#build-the-per-utterance-graph">1. Build the per-utterance graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#align">2. Align</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#beam-settings">Beam settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transition-probabilities">Transition probabilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#where-the-alignment-comes-from">Where the alignment comes from</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="streaming.html">Streaming and chunked input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decodables.html">Writing a decodable</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../design/index.html">Design notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">kaldi-decoder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Usage</a></li>
+      <li class="breadcrumb-item active">Forced alignment</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/usage/alignment.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="forced-alignment">
+<h1>Forced alignment<a class="headerlink" href="#forced-alignment" title="Link to this heading"></a></h1>
+<p>Forced alignment finds the best state sequence for a KNOWN word sequence --
+the engine of kaldi's <code class="docutils literal notranslate"><span class="pre">gmm-align-compiled</span></code>.  The decoding graph is the
+per-utterance training graph (transition-ids on the input side, the known
+words on the output side), compiled from the lexicon + transcript.</p>
+<section id="build-the-per-utterance-graph">
+<h2>1. Build the per-utterance graph<a class="headerlink" href="#build-the-per-utterance-graph" title="Link to this heading"></a></h2>
+<p>Use kaldi's <code class="docutils literal notranslate"><span class="pre">compile-train-graphs</span></code> (or
+<a class="reference external" href="https://github.com/csukuangfj/kaldi-hmm-gmm">kaldi-hmm-gmm</a>
+<code class="docutils literal notranslate"><span class="pre">TrainingGraphCompiler</span></code>).  IMPORTANT -- kaldi compiles these graphs with
+<code class="docutils literal notranslate"><span class="pre">transition_scale=0.0</span> <span class="pre">self_loop_scale=0.0</span></code>: the transition probabilities
+are added ONCE at alignment time (they change every training iteration).</p>
+</section>
+<section id="align">
+<h2>2. Align<a class="headerlink" href="#align" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kaldifst</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">kaldi_decoder</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kd</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">kaldifst</span><span class="o">.</span><span class="n">StdVectorFst</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"train_graph.1.fst"</span><span class="p">)</span>  <span class="c1"># keep alive!</span>
+<span class="n">decodable</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">DecodableMatrixScaledMapped</span><span class="p">(</span><span class="n">tm</span><span class="p">,</span> <span class="n">likes</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">AlignConfig</span><span class="p">(</span><span class="n">beam</span><span class="o">=</span><span class="mf">200.0</span><span class="p">,</span> <span class="n">retry_beam</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">careful</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="p">(</span><span class="n">num_done</span><span class="p">,</span> <span class="n">num_error</span><span class="p">,</span> <span class="n">num_retried</span><span class="p">,</span> <span class="n">tot_like</span><span class="p">,</span> <span class="n">frame_count</span><span class="p">,</span>
+ <span class="n">alignment</span><span class="p">,</span> <span class="n">words</span><span class="p">)</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">align_utterance_wrapper</span><span class="p">(</span>
+     <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">utt</span><span class="o">=</span><span class="s2">"utt1"</span><span class="p">,</span> <span class="n">acoustic_scale</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+     <span class="n">fst</span><span class="o">=</span><span class="n">graph</span><span class="p">,</span> <span class="n">decodable</span><span class="o">=</span><span class="n">decodable</span><span class="p">,</span>
+     <span class="n">num_done</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_error</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_retried</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+     <span class="n">tot_like</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">frame_count</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"alignment (transition-ids):"</span><span class="p">,</span> <span class="n">alignment</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"frames per state:"</span><span class="p">,</span> <span class="n">frame_count</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The five counters are inputs that the wrapper <em>increments</em> (they mirror
+kaldi's accumulating table writers), so a loop over utterances just threads
+them through.</p>
+</section>
+<section id="beam-settings">
+<h2>Beam settings<a class="headerlink" href="#beam-settings" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">beam=200</span></code> -- alignment uses a wide beam: the answer is known, we just
+need to find it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">retry_beam</span></code> -- if the first attempt fails (no path), retry with this
+beam; 0 disables the retry (kaldi's <code class="docutils literal notranslate"><span class="pre">--retry-beam</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">careful=True</span></code> -- kaldi's <code class="docutils literal notranslate"><span class="pre">--careful</span></code>: appends the graph to itself so a
+too-fast traversal (&quot;blind alley&quot;) is detected instead of silently
+producing a wrong alignment.  Slower; use when failures matter more than
+speed.  NOTE: careful mode MODIFIES the graph (adds the loop) -- pass a
+copy if you want to reuse it.</p></li>
+</ul>
+</section>
+<section id="transition-probabilities">
+<h2>Transition probabilities<a class="headerlink" href="#transition-probabilities" title="Link to this heading"></a></h2>
+<p>The graph must be compiled WITHOUT transition probabilities and they are
+added inside the alignment call (exactly kaldi's
+<code class="docutils literal notranslate"><span class="pre">gmm-align-compiled</span></code>):  with the scales given to the <em>compile</em> step at
+zero.  If you bake them into the graph AND add them here you get them
+double-counted (a real bug we hit; see the kaldi-hmm-gmm plan notes).</p>
+</section>
+<section id="where-the-alignment-comes-from">
+<h2>Where the alignment comes from<a class="headerlink" href="#where-the-alignment-comes-from" title="Link to this heading"></a></h2>
+<p>Internally: decode the graph (Viterbi), take the decode-time best path, and
+read its input labels (transition-ids) and output labels (words) -- see
+<a class="reference internal" href="../design/decoders.html"><span class="doc">How the decoders work</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="decoding.html" class="btn btn-neutral float-left" title="Decoding an utterance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="streaming.html" class="btn btn-neutral float-right" title="Streaming and chunked input" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2026, Next-gen Kaldi development team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,189 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The DecodableInterface boundary &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6c02275b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Lattice weights" href="lattices.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            kaldi-decoder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../pdf.html">Download pdf</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/index.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Design notes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="decoders.html">How the decoders work</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattices.html">Lattice weights</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">The DecodableInterface boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#four-methods">Four methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-per-frame-index-queries">Why per-(frame, index) queries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#one-based-indices">One-based indices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transitioninformation">TransitionInformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ownership">Ownership</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">kaldi-decoder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Design notes</a></li>
+      <li class="breadcrumb-item active">The DecodableInterface boundary</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/design/decodable_interface.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-decodableinterface-boundary">
+<h1>The DecodableInterface boundary<a class="headerlink" href="#the-decodableinterface-boundary" title="Link to this heading"></a></h1>
+<p>kaldi splits every decoder from every acoustic model with one tiny abstract
+class (<a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/itf/decodable-itf.h">src/itf/decodable-itf.h</a>).  kaldi-decoder keeps that boundary
+verbatim -- and it is why this library contains no GMM/NN code at all.</p>
+<section id="four-methods">
+<h2>Four methods<a class="headerlink" href="#four-methods" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LogLikelihood(frame,</span> <span class="pre">index)</span></code> -- one scalar query.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NumFramesReady()</span></code> -- how far the future is visible (streaming).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IsLastFrame(frame)</span></code> -- end-of-stream signal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NumIndices()</span></code> -- label space size.</p></li>
+</ul>
+<p>That is the entire contract.  GMMs (<code class="docutils literal notranslate"><span class="pre">DecodableAmDiagGmmScaled</span></code> in
+kaldi-hmm-gmm), matrices (<a class="reference internal" href="../python_api/decodable_matrix.html"><span class="doc">Decodable matrix classes</span></a>), CTC
+outputs, and Python prototypes all fit.</p>
+</section>
+<section id="why-per-frame-index-queries">
+<h2>Why per-(frame, index) queries<a class="headerlink" href="#why-per-frame-index-queries" title="Link to this heading"></a></h2>
+<p>The decoder decides WHICH indices to ask for (only arcs leaving active
+states), so a decodable never pays for unused scores.  Matrix-backed
+decodables make each query O(1); models that score on demand (streaming NN)
+can do exactly that.  The price is a virtual call per query -- acceptable
+next to the decoder's own bookkeeping, and eliminated entirely in C++-only
+builds (devirtualized when the concrete type is visible).</p>
+</section>
+<section id="one-based-indices">
+<h2>One-based indices<a class="headerlink" href="#one-based-indices" title="Link to this heading"></a></h2>
+<p>Openfst labels are one-based (0 is epsilon), so transition-ids -- which are
+graph input labels -- are one-based too.  Keeping the decodable's index
+space identical to the label space avoids a mapping at every query.</p>
+</section>
+<section id="transitioninformation">
+<h2>TransitionInformation<a class="headerlink" href="#transitioninformation" title="Link to this heading"></a></h2>
+<p>The one thing a decodable may additionally want is the transition model's
+tid-&gt;pdf map (GMM scores are per pdf, decoders ask per tid).  kaldi passes
+this as a separate abstract class,
+<a class="reference internal" href="../python_api/transition_information.html#kaldi_decoder.TransitionInformation" title="kaldi_decoder.TransitionInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitionInformation</span></code></a> -- optional, and only needed by
+the mapped matrix decodables and the utterance wrappers.  This keeps the
+decodable interface itself free of any model structure.</p>
+</section>
+<section id="ownership">
+<h2>Ownership<a class="headerlink" href="#ownership" title="Link to this heading"></a></h2>
+<p>In C++ decoders borrow both the graph and the decodable (no hidden copies;
+the caller owns them).  In the Python bindings the graph is tied to the
+decoder with <code class="docutils literal notranslate"><span class="pre">py::keep_alive</span></code> -- a temporary graph stays alive until the
+decoder is destroyed (see <a class="extlink-kd reference external" href="https://github.com/k2-fsa/kaldi-decoder/blob/master/kaldi-decoder/python/tests/test_lifetime.py">test_lifetime.py</a>); the decodable is only
+needed during the decode calls themselves.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lattices.html" class="btn btn-neutral float-left" title="Lattice weights" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2026, Next-gen Kaldi development team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

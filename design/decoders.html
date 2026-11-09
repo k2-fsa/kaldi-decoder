@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How the decoders work &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6c02275b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Lattice weights" href="lattices.html" />
+    <link rel="prev" title="Design notes" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            kaldi-decoder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../pdf.html">Download pdf</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/index.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Design notes</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">How the decoders work</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#why-token-passing">Why token passing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#beam-pruning">Beam pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#emitting-vs-non-emitting-steps">Emitting vs non-emitting steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#self-loops">Self-loops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lattice-decoders-forward-links">Lattice decoders: forward links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-two-beams">Why two beams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getbestpath-semantics">GetBestPath semantics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="lattices.html">Lattice weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decodable_interface.html">The DecodableInterface boundary</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">kaldi-decoder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Design notes</a></li>
+      <li class="breadcrumb-item active">How the decoders work</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/design/decoders.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="how-the-decoders-work">
+<h1>How the decoders work<a class="headerlink" href="#how-the-decoders-work" title="Link to this heading"></a></h1>
+<p>All four decoders are <strong>token-passing</strong> algorithms on the decoding FST: at
+each frame, every active state holds a <em>token</em> (the best cost so far plus a
+backpointer); emitting arcs extend tokens to the next frame, epsilon arcs
+are consumed within the frame, and a beam prunes hopeless states.</p>
+<section id="why-token-passing">
+<h2>Why token passing<a class="headerlink" href="#why-token-passing" title="Link to this heading"></a></h2>
+<p>The decoding graph <code class="docutils literal notranslate"><span class="pre">HCLG</span></code> is a transducer whose input labels are
+transition-ids and whose arcs already carry graph costs (LM + transition
+probabilities).  Acoustic scores arrive per frame, so the total cost of a
+path is <code class="docutils literal notranslate"><span class="pre">graph_cost</span> <span class="pre">+</span> <span class="pre">acoustic_cost</span></code> accumulated left to right -- exactly
+the tropical semiring shortest-path problem, solved online by dynamic
+programming (Viterbi).  Token passing keeps only the best token per state,
+which is sufficient for the 1-best and, with extra bookkeeping, for lattices.</p>
+</section>
+<section id="beam-pruning">
+<h2>Beam pruning<a class="headerlink" href="#beam-pruning" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">beam</span></code> is subtracted from the best cost of the frame to form the pruning
+threshold: any token worse than <code class="docutils literal notranslate"><span class="pre">best</span> <span class="pre">+</span> <span class="pre">beam</span></code> dies.  <code class="docutils literal notranslate"><span class="pre">max_active</span></code> /
+<code class="docutils literal notranslate"><span class="pre">min_active</span></code> bound the number of surviving tokens (the decoder adapts the
+effective beam to hit the bounds).  This makes cost -- not graph size -- the
+dominant factor.</p>
+</section>
+<section id="emitting-vs-non-emitting-steps">
+<h2>Emitting vs non-emitting steps<a class="headerlink" href="#emitting-vs-non-emitting-steps" title="Link to this heading"></a></h2>
+<p>One &quot;frame&quot; of decoding is: ProcessEmitting (consume one frame of acoustic
+scores via transition-id arcs) followed by ProcessNonemitting (closure over
+epsilon arcs).  The final costs of a frame's tokens are only complete after
+the non-emitting closure, which is why <code class="docutils literal notranslate"><span class="pre">GetBestPath</span></code> after the last frame
+may consult final-probs (<code class="docutils literal notranslate"><span class="pre">use_final_probs</span></code>).</p>
+</section>
+<section id="self-loops">
+<h2>Self-loops<a class="headerlink" href="#self-loops" title="Link to this heading"></a></h2>
+<p>HMM self-loops are ordinary arcs in the graph (inserted by kaldi's
+<code class="docutils literal notranslate"><span class="pre">add-self-loops</span></code>).  <code class="docutils literal notranslate"><span class="pre">FasterDecoder</span></code> assumes the graph is self-loop-free
+and is fastest; <code class="docutils literal notranslate"><span class="pre">LatticeFasterDecoder</span></code> / <code class="docutils literal notranslate"><span class="pre">LatticeSimpleDecoder</span></code> handle
+general graphs.</p>
+</section>
+<section id="lattice-decoders-forward-links">
+<h2>Lattice decoders: forward links<a class="headerlink" href="#lattice-decoders-forward-links" title="Link to this heading"></a></h2>
+<p>To output a lattice (alternatives), a token must remember more than its best
+predecessor: every near-best predecessor within <code class="docutils literal notranslate"><span class="pre">lattice_beam</span></code> becomes a
+<em>forward link</em>.  <code class="docutils literal notranslate"><span class="pre">LatticeFasterDecoder</span></code> maintains these links per token
+and prunes them lazily (<code class="docutils literal notranslate"><span class="pre">PruneForwardLinks</span></code>/<code class="docutils literal notranslate"><span class="pre">PruneTokensForFrame</span></code>), with
+final links computed at the end (<code class="docutils literal notranslate"><span class="pre">FinalizeDecoding</span></code>) so that final-probs
+are accounted exactly once.  Cost offsets (<code class="docutils literal notranslate"><span class="pre">cost_offsets_</span></code>) renormalize
+per-frame costs to keep floats in range during long utterances.</p>
+</section>
+<section id="why-two-beams">
+<h2>Why two beams<a class="headerlink" href="#why-two-beams" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">beam</span></code> controls how many states stay alive (speed/accuracy of the 1-best);
+<code class="docutils literal notranslate"><span class="pre">lattice_beam</span></code> controls how much detail the output lattice keeps.  Keeping
+them separate lets you decode fast but still dump a rich lattice (or vice
+versa).</p>
+</section>
+<section id="getbestpath-semantics">
+<h2>GetBestPath semantics<a class="headerlink" href="#getbestpath-semantics" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GetBestPath</span></code> returns the DECODE-TIME best path (the Viterbi winner under
+the costs the decoder saw).  This is what kaldi writes to its words and
+alignment tables in <code class="docutils literal notranslate"><span class="pre">gmm-latgen-faster</span></code>.  Scoring a lattice under
+different lm weights is a separate step
+(<a class="reference internal" href="lattices.html"><span class="doc">Lattice weights</span></a> / <code class="docutils literal notranslate"><span class="pre">lattice_best_path</span></code>).</p>
+<p>These designs all come straight from kaldi; see
+<a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/lattice-faster-decoder.cc">src/decoder/lattice-faster-decoder.cc</a> and kaldi's <code class="docutils literal notranslate"><span class="pre">doc/hmm.dox</span></code> for the
+original descriptions.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Design notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="lattices.html" class="btn btn-neutral float-right" title="Lattice weights" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2026, Next-gen Kaldi development team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

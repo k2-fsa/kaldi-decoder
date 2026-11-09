@@ -1,0 +1,480 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decodable matrix classes &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6c02275b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="TransitionInformation" href="transition_information.html" />
+    <link rel="prev" title="DecodableCtc" href="decodable_ctc.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            kaldi-decoder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../pdf.html">Download pdf</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="decodable_itf.html">DecodableInterface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decodable_ctc.html">DecodableCtc</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Decodable matrix classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equivalent-in-kaldi">Equivalent in kaldi</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mapping">Mapping</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#api-reference">API reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaledMapped"><code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaledMapped</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixMapped"><code class="docutils literal notranslate"><span class="pre">DecodableMatrixMapped</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixMappedOffset"><code class="docutils literal notranslate"><span class="pre">DecodableMatrixMappedOffset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaled"><code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaled</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="transition_information.html">TransitionInformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple_decoder.html">SimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faster_decoder.html">FasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattice_simple_decoder.html">LatticeSimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattice_faster_decoder.html">LatticeFasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decoder_wrappers.html">Decoder wrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html">Python API reference</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../design/index.html">Design notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">kaldi-decoder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Python API</a></li>
+      <li class="breadcrumb-item active">Decodable matrix classes</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/python_api/decodable_matrix.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="decodable-matrix-classes">
+<h1>Decodable matrix classes<a class="headerlink" href="#decodable-matrix-classes" title="Link to this heading"></a></h1>
+<p>Precomputed log-likelihood matrices wrapped as decodables, matching kaldi's
+<a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/decodable-matrix.h">decoder/decodable-matrix.h</a> (see
+<a class="extlink-kd reference external" href="https://github.com/k2-fsa/kaldi-decoder/blob/master/kaldi-decoder/csrc/decodable-matrix.h">kaldi-decoder/csrc/decodable-matrix.h</a>).  Use these whenever the full
+score matrix is already available -- they are the efficient alternative to a
+per-call Python decodable: all <code class="docutils literal notranslate"><span class="pre">log_likelihood</span></code> calls stay in C++.</p>
+<p>Four classes, same names as kaldi:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaledMapped</span></code> -- acoustic scale + tid-&gt;pdf mapping
+(GMM/NN scores are per-<strong>pdf</strong>; decoders ask per transition-id).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixMapped</span></code> -- same mapping, no scale, with a frame offset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixMappedOffset</span></code> -- incrementally fed chunks
+(multi-threaded decoding).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaled</span></code> -- no mapping; columns are the indices directly.</p></li>
+</ul>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">kaldi_decoder</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kd</span>
+
+<span class="c1"># tm: a kd.TransitionInformation (e.g. wrapping your transition model)</span>
+<span class="n">likes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>  <span class="c1"># 100 frames x 11 pdfs</span>
+
+<span class="n">decodable</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">DecodableMatrixScaledMapped</span><span class="p">(</span><span class="n">tm</span><span class="p">,</span> <span class="n">likes</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.083</span><span class="p">)</span>
+<span class="n">decodable</span><span class="o">.</span><span class="n">num_frames_ready</span><span class="p">()</span>       <span class="c1"># 100</span>
+<span class="n">decodable</span><span class="o">.</span><span class="n">num_indices</span><span class="p">()</span>            <span class="c1"># tm.num_transition_ids()</span>
+<span class="n">decodable</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>     <span class="c1"># scale * likes[0, tid_to_pdf[1]]</span>
+
+<span class="c1"># chunked input (frames arrive in pieces):</span>
+<span class="n">dec</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">DecodableMatrixMappedOffset</span><span class="p">(</span><span class="n">tm</span><span class="p">)</span>
+<span class="n">dec</span><span class="o">.</span><span class="n">accept_loglikes</span><span class="p">(</span><span class="n">chunk1</span><span class="p">,</span> <span class="n">frames_to_discard</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dec</span><span class="o">.</span><span class="n">accept_loglikes</span><span class="p">(</span><span class="n">chunk2</span><span class="p">,</span> <span class="n">frames_to_discard</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># drop 1 old frame</span>
+<span class="n">dec</span><span class="o">.</span><span class="n">input_is_finished</span><span class="p">()</span>
+<span class="n">dec</span><span class="o">.</span><span class="n">first_available_frame</span><span class="p">()</span>        <span class="c1"># frames below this are gone</span>
+</pre></div>
+</div>
+<p><strong>Lifetime:</strong> the constructors copy the numpy matrix and own the copy.  The
+numpy array may be deleted immediately afterwards (see the regression test
+<a class="extlink-kd reference external" href="https://github.com/k2-fsa/kaldi-decoder/blob/master/kaldi-decoder/python/tests/test_decodable_matrix.py">test_lifetime_after_numpy_gone</a>).</p>
+</section>
+<section id="equivalent-in-kaldi">
+<h2>Equivalent in kaldi<a class="headerlink" href="#equivalent-in-kaldi" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># kaldi: the same classes consume a Matrix&lt;BaseFloat&gt; of per-pdf likes,</span>
+<span class="c1"># e.g. produced by a neural net and written with matrix-write.</span>
+nnet3-compute<span class="w"> </span>...<span class="w"> </span><span class="p">|</span><span class="w"> </span>matrix-copy<span class="w"> </span>ark:-<span class="w"> </span>ark:likes.ark
+</pre></div>
+</div>
+<section id="mapping">
+<h3>Mapping<a class="headerlink" href="#mapping" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>kaldi</p></th>
+<th class="head"><p>python API</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Matrix&lt;BaseFloat&gt;</span> <span class="pre">likes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (float32, copied)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaledMapped</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">kd.DecodableMatrixScaledMapped(tm,</span> <span class="pre">...)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixMapped</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">kd.DecodableMatrixMapped(tm,</span> <span class="pre">...)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AcceptLoglikes(m,</span> <span class="pre">d)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">accept_loglikes(chunk,</span> <span class="pre">frames_to_discard)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">InputIsFinished()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">input_is_finished()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FirstAvailableFrame()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">first_available_frame()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaled</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">kd.DecodableMatrixScaled(likes,</span> <span class="pre">scale)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="api-reference">
+<h2>API reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaledMapped">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">kaldi_decoder.</span></span><span class="sig-name descname"><span class="pre">DecodableMatrixScaledMapped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaledMapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="transition_information.html#kaldi_decoder.TransitionInformation" title="kaldi_decoder.TransitionInformation"><span class="pre">kaldi_decoder.TransitionInformation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">likes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.ArrayLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.float32</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'[m,</span> <span class="pre">n]'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsFloat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaledMapped" title="Link to this definition"></a></dt>
+<dd><p>Matrix-backed decodable with acoustic scale and tid-&gt;pdf mapping.</p>
+<p>kaldi's <a class="reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/decodable-matrix.h">DecodableMatrixScaledMapped</a>.
+The matrix must have <code class="docutils literal notranslate"><span class="pre">tm.num_pdfs()</span></code> columns; row <code class="docutils literal notranslate"><span class="pre">t</span></code> holds the per-pdf
+log-likelihoods of frame <code class="docutils literal notranslate"><span class="pre">t</span></code>.  The score of transition-id <code class="docutils literal notranslate"><span class="pre">tid</span></code> at frame
+<code class="docutils literal notranslate"><span class="pre">t</span></code> is <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">likes(t,</span> <span class="pre">tid_to_pdf[tid])</span></code>.</p>
+<p>The numpy matrix is <strong>copied</strong> and owned by the decodable; it may be deleted
+right after construction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tm</strong> -- Transition model providing the tid-&gt;pdf map.</p></li>
+<li><p><strong>likes</strong> -- <code class="docutils literal notranslate"><span class="pre">(num_frames,</span> <span class="pre">num_pdfs)</span></code> float32 array.</p></li>
+<li><p><strong>scale</strong> -- Acoustic scale (kaldi <code class="docutils literal notranslate"><span class="pre">--acoustic-scale</span></code>).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaledMapped.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaledMapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="transition_information.html#kaldi_decoder.TransitionInformation" title="kaldi_decoder.TransitionInformation"><span class="pre">kaldi_decoder.TransitionInformation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">likes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.ArrayLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.float32</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'[m,</span> <span class="pre">n]'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsFloat</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaledMapped.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaledMapped.is_last_frame">
+<span class="sig-name descname"><span class="pre">is_last_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaledMapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaledMapped.is_last_frame" title="Link to this definition"></a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">frame</span></code> is the last frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaledMapped.log_likelihood">
+<span class="sig-name descname"><span class="pre">log_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaledMapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaledMapped.log_likelihood" title="Link to this definition"></a></dt>
+<dd><p>Scaled score of transition-id <code class="docutils literal notranslate"><span class="pre">tid</span></code> at <code class="docutils literal notranslate"><span class="pre">frame</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame</strong> -- Frame index, 0-based.</p></li>
+<li><p><strong>tid</strong> -- Transition-id, 1-based.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">likes(frame,</span> <span class="pre">tid_to_pdf[tid])</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaledMapped.num_frames_ready">
+<span class="sig-name descname"><span class="pre">num_frames_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaledMapped</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaledMapped.num_frames_ready" title="Link to this definition"></a></dt>
+<dd><p>Number of frames (matrix rows).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaledMapped.num_indices">
+<span class="sig-name descname"><span class="pre">num_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaledMapped</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaledMapped.num_indices" title="Link to this definition"></a></dt>
+<dd><p>Number of transition-ids (1-based).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMapped">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">kaldi_decoder.</span></span><span class="sig-name descname"><span class="pre">DecodableMatrixMapped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="transition_information.html#kaldi_decoder.TransitionInformation" title="kaldi_decoder.TransitionInformation"><span class="pre">kaldi_decoder.TransitionInformation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">likes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.ArrayLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.float32</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'[m,</span> <span class="pre">n]'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMapped" title="Link to this definition"></a></dt>
+<dd><p>Matrix-backed decodable with a frame offset (chunked scores).</p>
+<p>kaldi's <a class="reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/decodable-matrix.h">DecodableMatrixMapped</a>:
+like <a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaledMapped" title="kaldi_decoder.DecodableMatrixScaledMapped"><code class="xref py py-class docutils literal notranslate"><span class="pre">DecodableMatrixScaledMapped</span></code></a> but without an acoustic scale and
+with a frame offset -- row 0 of <code class="docutils literal notranslate"><span class="pre">likes</span></code> is frame <code class="docutils literal notranslate"><span class="pre">frame_offset</span></code> of the
+utterance.  Useful when scores arrive in chunks.</p>
+<p>The numpy matrix is <strong>copied</strong> and owned by the decodable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tm</strong> -- Transition model providing the tid-&gt;pdf map.</p></li>
+<li><p><strong>likes</strong> -- <code class="docutils literal notranslate"><span class="pre">(num_frames,</span> <span class="pre">num_pdfs)</span></code> float32 array.</p></li>
+<li><p><strong>frame_offset</strong> -- Frame index of row 0.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMapped.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="transition_information.html#kaldi_decoder.TransitionInformation" title="kaldi_decoder.TransitionInformation"><span class="pre">kaldi_decoder.TransitionInformation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">likes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.ArrayLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.float32</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'[m,</span> <span class="pre">n]'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMapped.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMapped.is_last_frame">
+<span class="sig-name descname"><span class="pre">is_last_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMapped.is_last_frame" title="Link to this definition"></a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">frame</span></code> is the last frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMapped.log_likelihood">
+<span class="sig-name descname"><span class="pre">log_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMapped.log_likelihood" title="Link to this definition"></a></dt>
+<dd><p>Score of transition-id <code class="docutils literal notranslate"><span class="pre">tid</span></code> at <code class="docutils literal notranslate"><span class="pre">frame</span></code> (no scale).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame</strong> -- Frame index (<code class="docutils literal notranslate"><span class="pre">frame</span> <span class="pre">&gt;=</span> <span class="pre">frame_offset</span></code>).</p></li>
+<li><p><strong>tid</strong> -- Transition-id, 1-based.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">likes(frame</span> <span class="pre">-</span> <span class="pre">frame_offset,</span> <span class="pre">tid_to_pdf[tid])</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMapped.num_frames_ready">
+<span class="sig-name descname"><span class="pre">num_frames_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMapped</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMapped.num_frames_ready" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">frame_offset</span> <span class="pre">+</span> <span class="pre">likes.shape[0]</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMapped.num_indices">
+<span class="sig-name descname"><span class="pre">num_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMapped</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMapped.num_indices" title="Link to this definition"></a></dt>
+<dd><p>Number of transition-ids (1-based).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">kaldi_decoder.</span></span><span class="sig-name descname"><span class="pre">DecodableMatrixMappedOffset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="transition_information.html#kaldi_decoder.TransitionInformation" title="kaldi_decoder.TransitionInformation"><span class="pre">kaldi_decoder.TransitionInformation</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset" title="Link to this definition"></a></dt>
+<dd><p>Incrementally-fed matrix decodable for streaming/threads.</p>
+<p>kaldi's <a class="reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/decodable-matrix.h">DecodableMatrixMappedOffset</a>:
+call <a class="reference internal" href="#kaldi_decoder.DecodableMatrixMappedOffset.accept_loglikes" title="kaldi_decoder.DecodableMatrixMappedOffset.accept_loglikes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_loglikes()</span></code></a> whenever a new chunk of per-pdf scores is
+available; old frames can be discarded to bound memory.  Querying a frame
+below <a class="reference internal" href="#kaldi_decoder.DecodableMatrixMappedOffset.first_available_frame" title="kaldi_decoder.DecodableMatrixMappedOffset.first_available_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">first_available_frame()</span></code></a> is an error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tm</strong> -- Transition model providing the tid-&gt;pdf map.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="transition_information.html#kaldi_decoder.TransitionInformation" title="kaldi_decoder.TransitionInformation"><span class="pre">kaldi_decoder.TransitionInformation</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset.accept_loglikes">
+<span class="sig-name descname"><span class="pre">accept_loglikes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loglikes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.ArrayLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.float32</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'[m,</span> <span class="pre">n]'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames_to_discard</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset.accept_loglikes" title="Link to this definition"></a></dt>
+<dd><p>Append a chunk of per-pdf scores.</p>
+<p>Destructive of the input (kaldi semantics): the input matrix may be
+emptied.  <code class="docutils literal notranslate"><span class="pre">frames_to_discard</span></code> drops the OLDEST stored frames when the
+chunk arrives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loglikes</strong> -- <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">num_pdfs)</span></code> float32 array.</p></li>
+<li><p><strong>frames_to_discard</strong> -- Number of oldest frames to drop.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset.first_available_frame">
+<span class="sig-name descname"><span class="pre">first_available_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset.first_available_frame" title="Link to this definition"></a></dt>
+<dd><p>Frames below this index have been discarded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset.input_is_finished">
+<span class="sig-name descname"><span class="pre">input_is_finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset.input_is_finished" title="Link to this definition"></a></dt>
+<dd><p>Mark end of input; required before <code class="docutils literal notranslate"><span class="pre">is_last_frame</span></code> can
+return <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset.is_last_frame">
+<span class="sig-name descname"><span class="pre">is_last_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset.is_last_frame" title="Link to this definition"></a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">frame</span></code> is the last frame of a FINISHED input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset.log_likelihood">
+<span class="sig-name descname"><span class="pre">log_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset.log_likelihood" title="Link to this definition"></a></dt>
+<dd><p>Score of transition-id <code class="docutils literal notranslate"><span class="pre">tid</span></code> at <code class="docutils literal notranslate"><span class="pre">frame</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset.num_frames_ready">
+<span class="sig-name descname"><span class="pre">num_frames_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset.num_frames_ready" title="Link to this definition"></a></dt>
+<dd><p>Frames available so far (discarded frames are gone).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixMappedOffset.num_indices">
+<span class="sig-name descname"><span class="pre">num_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixMappedOffset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixMappedOffset.num_indices" title="Link to this definition"></a></dt>
+<dd><p>Number of transition-ids (1-based).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaled">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">kaldi_decoder.</span></span><span class="sig-name descname"><span class="pre">DecodableMatrixScaled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaled" title="kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">likes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.ArrayLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.float32</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'[m,</span> <span class="pre">n]'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsFloat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaled" title="Link to this definition"></a></dt>
+<dd><p>Plain matrix-backed decodable with an acoustic scale (no map).</p>
+<p>kaldi's <a class="reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/decodable-matrix.h">DecodableMatrixScaled</a>:
+columns ARE the indices (one-based): the score of <code class="docutils literal notranslate"><span class="pre">index</span></code> at frame <code class="docutils literal notranslate"><span class="pre">t</span></code> is
+<code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">likes(t,</span> <span class="pre">index</span> <span class="pre">-</span> <span class="pre">1)</span></code>.  Use when the caller already has per-index
+scores (e.g. CTC-like graphs).</p>
+<p>The numpy matrix is <strong>copied</strong> and owned by the decodable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>likes</strong> -- <code class="docutils literal notranslate"><span class="pre">(num_frames,</span> <span class="pre">num_indices)</span></code> float32 array.</p></li>
+<li><p><strong>scale</strong> -- Acoustic scale.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaled.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaled" title="kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">likes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.ArrayLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.float32</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'[m,</span> <span class="pre">n]'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsFloat</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaled.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaled.is_last_frame">
+<span class="sig-name descname"><span class="pre">is_last_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaled" title="kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaled.is_last_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaled.log_likelihood">
+<span class="sig-name descname"><span class="pre">log_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaled" title="kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaled.log_likelihood" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaled.num_frames_ready">
+<span class="sig-name descname"><span class="pre">num_frames_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaled" title="kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaled.num_frames_ready" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableMatrixScaled.num_indices">
+<span class="sig-name descname"><span class="pre">num_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#kaldi_decoder.DecodableMatrixScaled" title="kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableMatrixScaled</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableMatrixScaled.num_indices" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="decodable_ctc.html" class="btn btn-neutral float-left" title="DecodableCtc" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="transition_information.html" class="btn btn-neutral float-right" title="TransitionInformation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2026, Next-gen Kaldi development team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,24 +1,24 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kaldi-decoder &mdash; kaldi-decoder 0.3.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>kaldi-decoder &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/clipboard.min.js"></script>
-        <script src="_static/copybutton.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6c02275b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -30,14 +30,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> kaldi-decoder
+
+          
+          
+          <a href="#" class="icon icon-home">
+            kaldi-decoder
           </a>
-              <div class="version">
-                0.3.2
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -54,6 +55,18 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="python_api/index.html">Python API</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage/index.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="design/index.html">Design notes</a></li>
+</ul>
 
         </div>
       </div>
@@ -68,8 +81,8 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>kaldi-decoder</li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">kaldi-decoder</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -80,7 +93,7 @@
            <div itemprop="articleBody">
              
   <section id="kaldi-decoder">
-<h1>kaldi-decoder<a class="headerlink" href="#kaldi-decoder" title="Permalink to this heading"></a></h1>
+<h1>kaldi-decoder<a class="headerlink" href="#kaldi-decoder" title="Link to this heading"></a></h1>
 <p>This repository ports the C++ decoder code from <a class="reference external" href="https://github.com/kaldi-asr/kaldi">Kaldi</a> using <a class="reference external" href="https://www.openfst.org/">OpenFst</a>
 without depending on <a class="reference external" href="https://github.com/kaldi-asr/kaldi">Kaldi</a>.</p>
 <div class="toctree-wrapper compound">
@@ -103,20 +116,63 @@ without depending on <a class="reference external" href="https://github.com/kald
 <p class="caption" role="heading"><span class="caption-text">Python API</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="python_api/index.html">Python API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="python_api/index.html#decodableinterface">DecodableInterface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python_api/index.html#decodablectc">DecodableCtc</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python_api/index.html#fasterdecoderoptions">FasterDecoderOptions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python_api/index.html#fasterdecoder">FasterDecoder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python_api/index.html#latticesimpledecoderconfig">LatticeSimpleDecoderConfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python_api/index.html#latticesimpledecoder">LatticeSimpleDecoder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python_api/index.html#simpledecoder">SimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/decodable_itf.html">DecodableInterface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/decodable_ctc.html">DecodableCtc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/decodable_matrix.html">Decodable matrix classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/transition_information.html">TransitionInformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/simple_decoder.html">SimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/faster_decoder.html">FasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/lattice_simple_decoder.html">LatticeSimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/lattice_faster_decoder.html">LatticeFasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/decoder_wrappers.html">Decoder wrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api/reference.html">Python API reference</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cpp-api/index.html">C++ API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/decodable_itf.html">DecodableInterface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/decodable_ctc.html">DecodableCtc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/decodable_matrix.html">Decodable matrix classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/transition_information.html">TransitionInformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/simple_decoder.html">SimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/faster_decoder.html">FasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/lattice_simple_decoder.html">LatticeSimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/lattice_faster_decoder.html">LatticeFasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp-api/decoder_wrappers.html">Decoder wrappers</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage/index.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/decoding.html">Decoding an utterance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/alignment.html">Forced alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/streaming.html">Streaming and chunked input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/decodables.html">Writing a decodable</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="design/index.html">Design notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="design/decoders.html">How the decoders work</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design/lattices.html">Lattice weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design/decodable_interface.html">The DecodableInterface boundary</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </section>
 <section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h1>
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>

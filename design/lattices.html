@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lattice weights &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6c02275b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The DecodableInterface boundary" href="decodable_interface.html" />
+    <link rel="prev" title="How the decoders work" href="decoders.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            kaldi-decoder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../pdf.html">Download pdf</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/index.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Design notes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="decoders.html">How the decoders work</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Lattice weights</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#semiring">Semiring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scaling">Scaling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-not-determinize-here">Why not determinize here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#alignment-extraction">Alignment extraction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="decodable_interface.html">The DecodableInterface boundary</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">kaldi-decoder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Design notes</a></li>
+      <li class="breadcrumb-item active">Lattice weights</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/design/lattices.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lattice-weights">
+<h1>Lattice weights<a class="headerlink" href="#lattice-weights" title="Link to this heading"></a></h1>
+<p>kaldi lattices use <code class="docutils literal notranslate"><span class="pre">LatticeWeight</span> <span class="pre">=</span> <span class="pre">(Value1,</span> <span class="pre">Value2)</span></code> where <strong>Value1 is the
+graph cost</strong> (LM + transition probabilities) and <strong>Value2 is the acoustic
+cost</strong> -- both negated log-probabilities (lower = better).  Keeping them
+separate is the whole point: rescoring or reweighting one side needs no
+re-decoding.</p>
+<section id="semiring">
+<h2>Semiring<a class="headerlink" href="#semiring" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Plus</span></code> (alternative paths) minimizes <code class="docutils literal notranslate"><span class="pre">Value1</span> <span class="pre">+</span> <span class="pre">Value2</span></code>; ties break by
+smaller Value1 (see <code class="docutils literal notranslate"><span class="pre">Compare</span></code> in
+<a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/fstext/lattice-weight.h">fstext/lattice-weight.h</a>).
+<code class="docutils literal notranslate"><span class="pre">Times</span></code> (concatenation) adds component-wise.  So a lattice is a
+shortest-path problem over a pair of tropical costs.</p>
+</section>
+<section id="scaling">
+<h2>Scaling<a class="headerlink" href="#scaling" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ScaleLattice(LatticeScale(lmwt,</span> <span class="pre">acwt),</span> <span class="pre">&amp;lat)</span></code> multiplies Value1 by
+<code class="docutils literal notranslate"><span class="pre">lmwt</span></code> and Value2 by <code class="docutils literal notranslate"><span class="pre">acwt</span></code>.  kaldi conventions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gmm-latgen-faster</span></code> writes lattices with acoustic costs divided by
+<code class="docutils literal notranslate"><span class="pre">--acoustic-scale</span></code> (<code class="docutils literal notranslate"><span class="pre">ScaleLattice(1,</span> <span class="pre">1/acoustic_scale)</span></code>) so the
+acoustic side is in raw log-likelihood units;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lattice-best-path</span> <span class="pre">--lm-scale=X</span> <span class="pre">--acoustic-scale=Y</span></code> then finds the
+1-best of the rescaled lattice: <code class="docutils literal notranslate"><span class="pre">argmin(X*V1</span> <span class="pre">+</span> <span class="pre">Y*V2)</span></code>.</p></li>
+</ul>
+<p><a class="reference internal" href="../python_api/decoder_wrappers.html#kaldi_decoder.lattice_best_path" title="kaldi_decoder.lattice_best_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">kaldi_decoder.lattice_best_path()</span></code></a> is exactly that core.  The decode
+wrappers return lattices already scaled the kaldi way, so calling
+<code class="docutils literal notranslate"><span class="pre">lattice_best_path(lat,</span> <span class="pre">lm_scale,</span> <span class="pre">1.0)</span></code> reproduces kaldi's scoring.</p>
+</section>
+<section id="why-not-determinize-here">
+<h2>Why not determinize here<a class="headerlink" href="#why-not-determinize-here" title="Link to this heading"></a></h2>
+<p>Determinization (<code class="docutils literal notranslate"><span class="pre">DeterminizeLatticePhonePruned</span></code>) merges equivalent
+alternative paths and is what kaldi writes to <code class="docutils literal notranslate"><span class="pre">compact</span> <span class="pre">lattices</span></code>.  It does
+NOT change the 1-best, so this port leaves it out (the raw lattice is enough
+for best-path / n-best extraction); the option structs are still provided for
+callers that want to plug in determinization from
+<a class="reference external" href="https://github.com/k2-fsa/kaldifst">kaldifst</a>.</p>
+</section>
+<section id="alignment-extraction">
+<h2>Alignment extraction<a class="headerlink" href="#alignment-extraction" title="Link to this heading"></a></h2>
+<p>A lattice path's input labels are transition-ids (the alignment) and its
+output labels are words.  <code class="docutils literal notranslate"><span class="pre">GetLinearSymbolSequence</span></code> linearizes a path FST
+into exactly those two sequences plus the total weight -- the single place
+all our outputs (words/alignments/likes) come from.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="decoders.html" class="btn btn-neutral float-left" title="How the decoders work" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="decodable_interface.html" class="btn btn-neutral float-right" title="The DecodableInterface boundary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2026, Next-gen Kaldi development team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

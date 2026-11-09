@@ -1,0 +1,296 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DecodableInterface &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6c02275b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DecodableCtc" href="decodable_ctc.html" />
+    <link rel="prev" title="Python API" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            kaldi-decoder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../pdf.html">Download pdf</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DecodableInterface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equivalent-in-kaldi">Equivalent in kaldi</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mapping">Mapping</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#api-reference">API reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kaldi_decoder.DecodableInterface"><code class="docutils literal notranslate"><span class="pre">DecodableInterface</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="decodable_ctc.html">DecodableCtc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decodable_matrix.html">Decodable matrix classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transition_information.html">TransitionInformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple_decoder.html">SimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faster_decoder.html">FasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattice_simple_decoder.html">LatticeSimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattice_faster_decoder.html">LatticeFasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decoder_wrappers.html">Decoder wrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html">Python API reference</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../design/index.html">Design notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">kaldi-decoder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Python API</a></li>
+      <li class="breadcrumb-item active">DecodableInterface</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/python_api/decodable_itf.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="decodableinterface">
+<h1>DecodableInterface<a class="headerlink" href="#decodableinterface" title="Link to this heading"></a></h1>
+<p>The scoring interface every decoder consumes, matching kaldi's
+<a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/itf/decodable-itf.h">DecodableInterface</a> (see
+<a class="extlink-kd reference external" href="https://github.com/k2-fsa/kaldi-decoder/blob/master/kaldi-decoder/csrc/decodable-itf.h">kaldi-decoder/csrc/decodable-itf.h</a>).  Implement it in Python to plug any
+acoustic model into the decoders; the pybind11 trampoline keeps virtual
+dispatch on the Python side.</p>
+<p>A decodable answers one question: <em>how likely is transition-id ``index`` at
+frame ``frame``?</em>  Indices are <strong>one-based</strong> (openfst convention).</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kaldi_decoder</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kd</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyDecodable</span><span class="p">(</span><span class="n">kd</span><span class="o">.</span><span class="n">DecodableInterface</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_frames_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">100</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_last_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">frame</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_frames_ready</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">30</span>          <span class="c1"># number of transition-ids (1-based)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="c1"># higher is better; return the acoustic log-likelihood of</span>
+        <span class="c1"># transition-id `index` at `frame`.</span>
+        <span class="k">return</span> <span class="n">my_scores</span><span class="p">[</span><span class="n">frame</span><span class="p">,</span> <span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="n">decodable</span> <span class="o">=</span> <span class="n">MyDecodable</span><span class="p">()</span>
+<span class="n">decoder</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">FasterDecoder</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">kd</span><span class="o">.</span><span class="n">FasterDecoderOptions</span><span class="p">(</span><span class="n">beam</span><span class="o">=</span><span class="mf">16.0</span><span class="p">))</span>
+<span class="n">decoder</span><span class="o">.</span><span class="n">init_decoding</span><span class="p">()</span>
+<span class="n">decoder</span><span class="o">.</span><span class="n">advance_decoding</span><span class="p">(</span><span class="n">decodable</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Lifetime rule:</strong> decoders hold a reference to the decodable (and to the
+graph) without owning it.  The decoder keeps the graph alive automatically; the
+decodable is only needed during the decode calls.</p>
+</section>
+<section id="equivalent-in-kaldi">
+<h2>Equivalent in kaldi<a class="headerlink" href="#equivalent-in-kaldi" title="Link to this heading"></a></h2>
+<p>Any kaldi decoder binary takes scores from a GMM/NN model internally; the
+DecodableInterface is exactly the seam kaldi uses between the acoustic model
+and the decoder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># kaldi computes these scores internally via DecodableAmDiagGmmScaled etc.</span>
+gmm-latgen-faster<span class="w"> </span>--max-active<span class="o">=</span><span class="m">7000</span><span class="w"> </span>--beam<span class="o">=</span><span class="m">13</span>.0<span class="w"> </span>--lattice-beam<span class="o">=</span><span class="m">6</span>.0<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--acoustic-scale<span class="o">=</span><span class="m">0</span>.083<span class="w"> </span>final.mdl<span class="w"> </span>HCLG.fst<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">"scp:split.1/feats.scp"</span><span class="w"> </span><span class="s2">"ark:|gzip -c &gt; lat.1.gz"</span>
+</pre></div>
+</div>
+<section id="mapping">
+<h3>Mapping<a class="headerlink" href="#mapping" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>kaldi</p></th>
+<th class="head"><p>python API</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DecodableInterface</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">kaldi_decoder.DecodableInterface</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LogLikelihood(frame,</span> <span class="pre">index)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">log_likelihood(self,</span> <span class="pre">frame,</span> <span class="pre">index)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NumFramesReady()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">num_frames_ready(self)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IsLastFrame(frame)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">is_last_frame(self,</span> <span class="pre">frame)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NumIndices()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">num_indices(self)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="api-reference">
+<h2>API reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableInterface">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">kaldi_decoder.</span></span><span class="sig-name descname"><span class="pre">DecodableInterface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableInterface</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kaldi_decoder.DecodableInterface" title="Link to this definition"></a></dt>
+<dd><p>Scoring interface every decoder consumes.</p>
+<p>This is kaldi's <a class="reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/itf/decodable-itf.h">DecodableInterface</a>.
+It answers one question: <em>how likely is transition-id ``index`` at frame
+``frame``?</em>  Implement it in Python to plug any acoustic model into the
+decoders (a pybind11 trampoline keeps virtual dispatch on the Python side).</p>
+<p>Indices are <strong>one-based</strong> (openfst convention, 0 is epsilon).</p>
+<p><strong>Lifetime:</strong> decoders borrow the decodable without owning it -- keep the
+Python object alive for the whole decode.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="decodable_matrix.html#kaldi_decoder.DecodableMatrixScaledMapped" title="kaldi_decoder.DecodableMatrixScaledMapped"><code class="xref py py-class docutils literal notranslate"><span class="pre">DecodableMatrixScaledMapped</span></code></a>
+For the fast matrix-backed implementation.</p>
+</div>
+<p>Construct a decodable; implement the four methods below.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableInterface.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableInterface</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableInterface.__init__" title="Link to this definition"></a></dt>
+<dd><p>Construct a decodable; implement the four methods below.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableInterface.is_last_frame">
+<span class="sig-name descname"><span class="pre">is_last_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableInterface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableInterface.is_last_frame" title="Link to this definition"></a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">frame</span></code> is the last frame with scores available.</p>
+<p>For streaming decodables this is only true once the input is finished.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableInterface.log_likelihood">
+<span class="sig-name descname"><span class="pre">log_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableInterface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableInterface.log_likelihood" title="Link to this definition"></a></dt>
+<dd><p>Acoustic log-likelihood of transition-id <code class="docutils literal notranslate"><span class="pre">index</span></code> at frame
+<code class="docutils literal notranslate"><span class="pre">frame</span></code> (higher is better).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame</strong> -- Frame index, 0-based, <code class="docutils literal notranslate"><span class="pre">frame</span> <span class="pre">&lt;</span> <span class="pre">num_frames_ready()</span></code>.</p></li>
+<li><p><strong>index</strong> -- Transition-id, 1-based, <code class="docutils literal notranslate"><span class="pre">index</span> <span class="pre">&lt;=</span> <span class="pre">num_indices()</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The log-likelihood.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableInterface.num_frames_ready">
+<span class="sig-name descname"><span class="pre">num_frames_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableInterface</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableInterface.num_frames_ready" title="Link to this definition"></a></dt>
+<dd><p>Number of frames with scores available; may grow over time.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kaldi_decoder.DecodableInterface.num_indices">
+<span class="sig-name descname"><span class="pre">num_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">kaldi_decoder.lib._kaldi_decoder.DecodableInterface</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#kaldi_decoder.DecodableInterface.num_indices" title="Link to this definition"></a></dt>
+<dd><p>Number of valid indices (transition-ids); indices are
+1-based.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="decodable_ctc.html" class="btn btn-neutral float-right" title="DecodableCtc" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2026, Next-gen Kaldi development team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

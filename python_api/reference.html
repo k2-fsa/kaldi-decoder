@@ -1,0 +1,305 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python API reference &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6c02275b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="C++ API" href="../cpp-api/index.html" />
+    <link rel="prev" title="Decoder wrappers" href="decoder_wrappers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            kaldi-decoder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../pdf.html">Download pdf</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="decodable_itf.html">DecodableInterface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decodable_ctc.html">DecodableCtc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decodable_matrix.html">Decodable matrix classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transition_information.html">TransitionInformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple_decoder.html">SimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faster_decoder.html">FasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattice_simple_decoder.html">LatticeSimpleDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattice_faster_decoder.html">LatticeFasterDecoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decoder_wrappers.html">Decoder wrappers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Python API reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#decodableinterface">DecodableInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#decodablectc">DecodableCtc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#decodable-matrix-classes">Decodable matrix classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transitioninformation">TransitionInformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simpledecoder">SimpleDecoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fasterdecoder-fasterdecoderoptions">FasterDecoder / FasterDecoderOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#latticesimpledecoder-latticesimpledecoderconfig">LatticeSimpleDecoder / LatticeSimpleDecoderConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#latticefasterdecoder-latticefasterdecoderconfig">LatticeFasterDecoder / LatticeFasterDecoderConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#decoder-wrappers">Decoder wrappers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../design/index.html">Design notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">kaldi-decoder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Python API</a></li>
+      <li class="breadcrumb-item active">Python API reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/python_api/reference.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="python-api-reference">
+<h1>Python API reference<a class="headerlink" href="#python-api-reference" title="Link to this heading"></a></h1>
+<p>Every class and every field, with the kaldi counterpart of each item.</p>
+<section id="decodableinterface">
+<h2>DecodableInterface<a class="headerlink" href="#decodableinterface" title="Link to this heading"></a></h2>
+<p>kaldi counterpart: <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/itf/decodable-itf.h">DecodableInterface</a>.
+Implement all four methods (indices are one-based):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">num_frames_ready()</span> <span class="pre">-&gt;</span> <span class="pre">int</span></code> -- how many frames have scores available.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_last_frame(frame)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code> -- True for the last available frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_indices()</span> <span class="pre">-&gt;</span> <span class="pre">int</span></code> -- number of transition-ids (1-based).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">log_likelihood(frame,</span> <span class="pre">index)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code> -- acoustic log-likelihood of
+transition-id <code class="docutils literal notranslate"><span class="pre">index</span></code> at <code class="docutils literal notranslate"><span class="pre">frame</span></code>; higher is better.</p></li>
+</ul>
+</section>
+<section id="decodablectc">
+<h2>DecodableCtc<a class="headerlink" href="#decodablectc" title="Link to this heading"></a></h2>
+<p>Matrix-backed decodable for CTC-style scores.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableCtc(log_probs,</span> <span class="pre">offset=0)</span></code> -- <code class="docutils literal notranslate"><span class="pre">log_probs</span></code> is a
+<code class="docutils literal notranslate"><span class="pre">(num_frames,</span> <span class="pre">num_classes)</span></code> float32 <code class="docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> (copied).
+<em>kaldi</em>: spirit of <code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaled</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">offset:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></code> -- frame index of row 0 (chunked streaming).</p></li>
+</ul>
+</section>
+<section id="decodable-matrix-classes">
+<h2>Decodable matrix classes<a class="headerlink" href="#decodable-matrix-classes" title="Link to this heading"></a></h2>
+<p>kaldi counterpart: <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/decodable-matrix.h">decodable-matrix.h</a>.
+All four copy/own their numpy matrix.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaledMapped(tm,</span> <span class="pre">likes,</span> <span class="pre">scale)</span></code> -- per-pdf scores
+<code class="docutils literal notranslate"><span class="pre">likes</span></code> (<code class="docutils literal notranslate"><span class="pre">num_frames</span> <span class="pre">x</span> <span class="pre">tm.num_pdfs()</span></code>), tid-&gt;pdf mapping via <code class="docutils literal notranslate"><span class="pre">tm</span></code>,
+score = <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">likes[frame,</span> <span class="pre">tid_to_pdf[tid]]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixMapped(tm,</span> <span class="pre">likes,</span> <span class="pre">frame_offset=0)</span></code> -- same mapping, no
+scale; row 0 is frame <code class="docutils literal notranslate"><span class="pre">frame_offset</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixMappedOffset(tm)</span></code> -- incrementally fed:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">accept_loglikes(loglikes,</span> <span class="pre">frames_to_discard=0)</span></code> -- append a chunk,
+dropping <code class="docutils literal notranslate"><span class="pre">frames_to_discard</span></code> oldest frames (destructive of the input,
+as in kaldi);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input_is_finished()</span></code> -- mark end of input;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first_available_frame()</span></code> -- frames below this have been discarded.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DecodableMatrixScaled(likes,</span> <span class="pre">scale)</span></code> -- no mapping; index <code class="docutils literal notranslate"><span class="pre">i</span></code> is
+column <code class="docutils literal notranslate"><span class="pre">i-1</span></code>.</p></li>
+</ul>
+</section>
+<section id="transitioninformation">
+<h2>TransitionInformation<a class="headerlink" href="#transitioninformation" title="Link to this heading"></a></h2>
+<p>kaldi counterpart: <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/itf/transition-information.h">TransitionInformation</a>.
+Implement all pure methods; <code class="docutils literal notranslate"><span class="pre">num_transition_ids()</span></code> is derived.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">transition_ids_equivalent(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transition_id_is_start_of_phone(tid)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transition_id_to_phone(tid)</span> <span class="pre">-&gt;</span> <span class="pre">int</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_final(tid)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_self_loop(tid)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transition_id_to_pdf_array()</span> <span class="pre">-&gt;</span> <span class="pre">list</span></code> -- whole map, index 0 unused.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_pdfs()</span> <span class="pre">-&gt;</span> <span class="pre">int</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_transition_ids()</span> <span class="pre">-&gt;</span> <span class="pre">int</span></code> -- <code class="docutils literal notranslate"><span class="pre">len(tid_to_pdf)</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p></li>
+</ul>
+</section>
+<section id="simpledecoder">
+<h2>SimpleDecoder<a class="headerlink" href="#simpledecoder" title="Link to this heading"></a></h2>
+<p>kaldi counterpart: <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/simple-decoder.h">SimpleDecoder</a>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SimpleDecoder(graph,</span> <span class="pre">beam)</span></code> -- borrows <code class="docutils literal notranslate"><span class="pre">graph</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decode(decodable)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code> -- run to the end of available frames.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reached_final()</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_best_path(use_final_probs=True)</span> <span class="pre">-&gt;</span> <span class="pre">(bool,</span> <span class="pre">Lattice)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">final_relative_cost()</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code> -- <code class="docutils literal notranslate"><span class="pre">inf</span></code> means no final state reached.</p></li>
+</ul>
+</section>
+<section id="fasterdecoder-fasterdecoderoptions">
+<h2>FasterDecoder / FasterDecoderOptions<a class="headerlink" href="#fasterdecoder-fasterdecoderoptions" title="Link to this heading"></a></h2>
+<p>kaldi counterpart: <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/faster-decoder.h">FasterDecoder</a>.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">FasterDecoderOptions(beam=16.0,</span> <span class="pre">max_active=INT32_MAX,</span> <span class="pre">min_active=20,</span>
+<span class="pre">beam_delta=0.5,</span> <span class="pre">hash_ratio=2.0)</span></code> -- all fields are writable.</p>
+<p><em>kaldi</em>: <code class="docutils literal notranslate"><span class="pre">--beam</span></code>, <code class="docutils literal notranslate"><span class="pre">--max-active</span></code>, <code class="docutils literal notranslate"><span class="pre">--min-active</span></code>, <code class="docutils literal notranslate"><span class="pre">--beam-delta</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--hash-ratio</span></code>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FasterDecoder(graph,</span> <span class="pre">opts)</span></code> -- borrows <code class="docutils literal notranslate"><span class="pre">graph</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">init_decoding()</span></code> / <code class="docutils literal notranslate"><span class="pre">advance_decoding(decodable,</span> <span class="pre">max_num_frames=-1)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decode(decodable)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code> -- init + advance all frames.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reached_final()</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code> / <code class="docutils literal notranslate"><span class="pre">final_relative_cost()</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_best_path(use_final_probs=True)</span> <span class="pre">-&gt;</span> <span class="pre">(bool,</span> <span class="pre">Lattice)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_frames_decoded()</span> <span class="pre">-&gt;</span> <span class="pre">int</span></code> / <code class="docutils literal notranslate"><span class="pre">set_options(opts)</span></code> / <code class="docutils literal notranslate"><span class="pre">get_options()</span></code></p></li>
+</ul>
+</section>
+<section id="latticesimpledecoder-latticesimpledecoderconfig">
+<h2>LatticeSimpleDecoder / LatticeSimpleDecoderConfig<a class="headerlink" href="#latticesimpledecoder-latticesimpledecoderconfig" title="Link to this heading"></a></h2>
+<p>kaldi counterpart: <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/lattice-simple-decoder.h">LatticeSimpleDecoder</a>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LatticeSimpleDecoderConfig(beam=16.0,</span> <span class="pre">lattice_beam=10.0,</span>
+<span class="pre">prune_interval=25,</span> <span class="pre">determinize_lattice=True,</span> <span class="pre">prune_lattice=True,</span>
+<span class="pre">beam_ratio=0.9,</span> <span class="pre">prune_scale=0.1)</span></code> -- all fields writable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LatticeSimpleDecoder(graph,</span> <span class="pre">config)</span></code> -- borrows <code class="docutils literal notranslate"><span class="pre">graph</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decode(decodable)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_best_path(use_final_probs=True)</span> <span class="pre">-&gt;</span> <span class="pre">(bool,</span> <span class="pre">Lattice)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_raw_lattice(use_final_probs=True)</span> <span class="pre">-&gt;</span> <span class="pre">(bool,</span> <span class="pre">Lattice)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reached_final()</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code> / <code class="docutils literal notranslate"><span class="pre">final_relative_cost()</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">init_decoding()</span></code> / <code class="docutils literal notranslate"><span class="pre">finalize_decoding()</span></code> / <code class="docutils literal notranslate"><span class="pre">num_frames_decoded()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_config()</span></code></p></li>
+</ul>
+</section>
+<section id="latticefasterdecoder-latticefasterdecoderconfig">
+<h2>LatticeFasterDecoder / LatticeFasterDecoderConfig<a class="headerlink" href="#latticefasterdecoder-latticefasterdecoderconfig" title="Link to this heading"></a></h2>
+<p>kaldi counterpart: <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/lattice-faster-decoder.h">LatticeFasterDecoder</a>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LatticeFasterDecoderConfig(beam=16.0,</span> <span class="pre">max_active=INT32_MAX,</span>
+<span class="pre">min_active=200,</span> <span class="pre">lattice_beam=10.0,</span> <span class="pre">prune_interval=25,</span>
+<span class="pre">determinize_lattice=True,</span> <span class="pre">beam_delta=0.5,</span> <span class="pre">hash_ratio=2.0,</span>
+<span class="pre">prune_scale=0.1,</span> <span class="pre">memory_pool_tokens_block_size=256,</span>
+<span class="pre">memory_pool_links_block_size=256)</span></code> -- all fields writable; <code class="docutils literal notranslate"><span class="pre">check()</span></code>
+validates ranges (kaldi <code class="docutils literal notranslate"><span class="pre">Check()</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LatticeFasterDecoder(graph,</span> <span class="pre">config)</span></code> -- borrows <code class="docutils literal notranslate"><span class="pre">graph</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decode(decodable)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">init_decoding()</span></code> / <code class="docutils literal notranslate"><span class="pre">advance_decoding(decodable,</span> <span class="pre">max_num_frames=-1)</span></code> /
+<code class="docutils literal notranslate"><span class="pre">finalize_decoding()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_best_path(use_final_probs=True)</span> <span class="pre">-&gt;</span> <span class="pre">(bool,</span> <span class="pre">Lattice)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_raw_lattice(use_final_probs=True)</span> <span class="pre">-&gt;</span> <span class="pre">(bool,</span> <span class="pre">Lattice)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reached_final()</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code> / <code class="docutils literal notranslate"><span class="pre">final_relative_cost()</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_frames_decoded()</span> <span class="pre">-&gt;</span> <span class="pre">int</span></code> / <code class="docutils literal notranslate"><span class="pre">set_options(cfg)</span></code> / <code class="docutils literal notranslate"><span class="pre">get_options()</span></code></p></li>
+</ul>
+</section>
+<section id="decoder-wrappers">
+<h2>Decoder wrappers<a class="headerlink" href="#decoder-wrappers" title="Link to this heading"></a></h2>
+<p>kaldi counterpart: <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/decoder/decoder-wrappers.h">decoder-wrappers.h</a>
+and <a class="extlink-kaldi reference external" href="https://github.com/kaldi-asr/kaldi/blob/master/src/latbin/lattice-best-path.cc">lattice-best-path.cc</a>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AlignConfig(beam=200.0,</span> <span class="pre">retry_beam=0.0,</span> <span class="pre">careful=False)</span></code> -- <em>kaldi</em>:
+<code class="docutils literal notranslate"><span class="pre">--beam</span></code>, <code class="docutils literal notranslate"><span class="pre">--retry-beam</span></code>, <code class="docutils literal notranslate"><span class="pre">--careful</span></code> (of <code class="docutils literal notranslate"><span class="pre">gmm-align-compiled</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align_utterance_wrapper(config,</span> <span class="pre">utt,</span> <span class="pre">acoustic_scale,</span> <span class="pre">fst,</span> <span class="pre">decodable,</span>
+<span class="pre">num_done,</span> <span class="pre">num_error,</span> <span class="pre">num_retried,</span> <span class="pre">tot_like,</span> <span class="pre">frame_count)</span> <span class="pre">-&gt;</span> <span class="pre">7-tuple</span></code> --
+returns <code class="docutils literal notranslate"><span class="pre">(num_done,</span> <span class="pre">num_error,</span> <span class="pre">num_retried,</span> <span class="pre">tot_like,</span> <span class="pre">frame_count,</span>
+<span class="pre">alignment,</span> <span class="pre">words)</span></code>; the five counters are <em>inputs</em> that get incremented
+(kaldi's accumulating writers).  Mutates <code class="docutils literal notranslate"><span class="pre">fst</span></code> when
+<code class="docutils literal notranslate"><span class="pre">config.careful</span></code> is set (adds the careful loop).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decode_utterance_lattice_faster(decoder,</span> <span class="pre">decodable,</span> <span class="pre">trans_model,</span> <span class="pre">utt,</span>
+<span class="pre">allow_partial,</span> <span class="pre">acoustic_scale)</span> <span class="pre">-&gt;</span> <span class="pre">(ok,</span> <span class="pre">alignment,</span> <span class="pre">words,</span> <span class="pre">like,</span> <span class="pre">lat)</span></code> --
+<code class="docutils literal notranslate"><span class="pre">alignment</span></code>/<code class="docutils literal notranslate"><span class="pre">words</span></code> are the decode-time best path (as kaldi writes its
+tables); <code class="docutils literal notranslate"><span class="pre">lat</span></code> is the raw lattice with acoustic costs divided by
+<code class="docutils literal notranslate"><span class="pre">acoustic_scale</span></code> (exactly as kaldi writes <code class="docutils literal notranslate"><span class="pre">lat.gz</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decode_utterance_lattice_simple(...)</span></code> -- same for
+<code class="docutils literal notranslate"><span class="pre">LatticeSimpleDecoder</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lattice_best_path(lat,</span> <span class="pre">lm_scale=1.0,</span> <span class="pre">acoustic_scale=1.0)</span> <span class="pre">-&gt;</span>
+<span class="pre">(ok,</span> <span class="pre">alignment,</span> <span class="pre">words,</span> <span class="pre">like)</span></code> -- kaldi's <code class="docutils literal notranslate"><span class="pre">lattice-best-path</span></code>: minimizes
+<code class="docutils literal notranslate"><span class="pre">lm_scale</span> <span class="pre">*</span> <span class="pre">graph_cost</span> <span class="pre">+</span> <span class="pre">acoustic_scale</span> <span class="pre">*</span> <span class="pre">acoustic_cost</span></code>.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="decoder_wrappers.html" class="btn btn-neutral float-left" title="Decoder wrappers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../cpp-api/index.html" class="btn btn-neutral float-right" title="C++ API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2026, Next-gen Kaldi development team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

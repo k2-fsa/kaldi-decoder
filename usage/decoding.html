@@ -1,0 +1,248 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decoding an utterance &mdash; kaldi-decoder 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6c02275b"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Forced alignment" href="alignment.html" />
+    <link rel="prev" title="Usage" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            kaldi-decoder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../pdf.html">Download pdf</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/index.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cpp-api/index.html">C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Usage</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Decoding an utterance</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-decoding-graph">1. The decoding graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-scores-a-decodable">2. The scores (a decodable)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#decode">3. Decode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-results">4. Get results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#score-the-lattice-lm-weights-word-penalties">5. Score the lattice (lm weights / word penalties)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#choosing-beam-settings">Choosing beam settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="alignment.html">Forced alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="streaming.html">Streaming and chunked input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decodables.html">Writing a decodable</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../design/index.html">Design notes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">kaldi-decoder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Usage</a></li>
+      <li class="breadcrumb-item active">Decoding an utterance</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/k2-fsa/kaldi-decoder/blob/master/docs/source/usage/decoding.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="decoding-an-utterance">
+<h1>Decoding an utterance<a class="headerlink" href="#decoding-an-utterance" title="Link to this heading"></a></h1>
+<p>This walks through decoding one utterance end to end: build (or load) a
+decoding graph, wrap your acoustic scores, run
+<a class="reference internal" href="../python_api/lattice_faster_decoder.html#kaldi_decoder.LatticeFasterDecoder" title="kaldi_decoder.LatticeFasterDecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">LatticeFasterDecoder</span></code></a>, and extract results.</p>
+<section id="the-decoding-graph">
+<h2>1. The decoding graph<a class="headerlink" href="#the-decoding-graph" title="Link to this heading"></a></h2>
+<p>The graph <code class="docutils literal notranslate"><span class="pre">HCLG</span></code> maps transition-ids (decoder input labels) to words
+(output labels).  kaldi-decoder never builds graphs -- use
+<a class="reference external" href="https://github.com/k2-fsa/kaldifst">kaldifst</a> or kaldi's graph-building
+tools:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kaldifst</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">kaldifst</span><span class="o">.</span><span class="n">StdVectorFst</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"HCLG.fst"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">num_states</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also construct tiny graphs by hand (as
+<a class="extlink-kd reference external" href="https://github.com/k2-fsa/kaldi-decoder/blob/master/kaldi-decoder/csrc/lattice-faster-decoder-test.cc">the C++ unit tests</a>
+and <a class="extlink-kd reference external" href="https://github.com/k2-fsa/kaldi-decoder/blob/master/kaldi-decoder/python/tests/test_decoders.py">the python tests</a> do):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">kaldifst</span><span class="o">.</span><span class="n">StdVectorFst</span><span class="p">()</span>
+<span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_state</span><span class="p">(),</span> <span class="n">g</span><span class="o">.</span><span class="n">add_state</span><span class="p">(),</span> <span class="n">g</span><span class="o">.</span><span class="n">add_state</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">s0</span>
+<span class="n">g</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">s0</span><span class="p">,</span> <span class="n">kaldifst</span><span class="o">.</span><span class="n">StdArc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">s1</span><span class="p">))</span>   <span class="c1"># tid 1 -&gt; word 10</span>
+<span class="n">g</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">kaldifst</span><span class="o">.</span><span class="n">StdArc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">s2</span><span class="p">))</span>   <span class="c1"># tid 2 -&gt; word 20</span>
+<span class="n">g</span><span class="o">.</span><span class="n">set_final</span><span class="p">(</span><span class="n">s2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The decoder <strong>holds a reference</strong> to the graph (<code class="docutils literal notranslate"><span class="pre">py::keep_alive</span></code>), so
+the graph is released only when the decoder is destroyed -- passing a
+temporary graph is safe.  (The same rule is enforced by the regression
+test <a class="extlink-kd reference external" href="https://github.com/k2-fsa/kaldi-decoder/blob/master/kaldi-decoder/python/tests/test_lifetime.py">test_lifetime.py</a>.)</p>
+</div>
+</section>
+<section id="the-scores-a-decodable">
+<h2>2. The scores (a decodable)<a class="headerlink" href="#the-scores-a-decodable" title="Link to this heading"></a></h2>
+<p>Pick whichever fits your scores; see <a class="reference internal" href="decodables.html"><span class="doc">Writing a decodable</span></a> for the full
+guide.  The quickest option when you already have a score matrix:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">likes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_frames</span><span class="p">,</span> <span class="n">num_pdfs</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">decodable</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">DecodableMatrixScaledMapped</span><span class="p">(</span><span class="n">tm</span><span class="p">,</span> <span class="n">likes</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.083</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="decode">
+<h2>3. Decode<a class="headerlink" href="#decode" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">LatticeFasterDecoderConfig</span><span class="p">(</span><span class="n">beam</span><span class="o">=</span><span class="mf">13.0</span><span class="p">,</span> <span class="n">lattice_beam</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
+                                    <span class="n">max_active</span><span class="o">=</span><span class="mi">7000</span><span class="p">)</span>
+<span class="n">decoder</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">LatticeFasterDecoder</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
+<span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">decodable</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">decoder</span><span class="o">.</span><span class="n">reached_final</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"warning: no final state reached; consider allow_partial"</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="get-results">
+<h2>4. Get results<a class="headerlink" href="#get-results" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ok</span><span class="p">,</span> <span class="n">best</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">get_best_path</span><span class="p">()</span>
+<span class="c1"># best is a kaldifst.Lattice; read the 1-best labels by walking</span>
+<span class="c1"># start -&gt; final (a ready-made walker lives in the unit tests)</span>
+
+<span class="n">ok</span><span class="p">,</span> <span class="n">raw</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">get_raw_lattice</span><span class="p">()</span>   <span class="c1"># alternatives within lattice_beam</span>
+</pre></div>
+</div>
+<p>Or let the utterance-level wrapper do steps 3-4 and return plain lists (this
+is what kaldi's <code class="docutils literal notranslate"><span class="pre">gmm-latgen-faster</span></code> writes to its tables):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ok</span><span class="p">,</span> <span class="n">alignment</span><span class="p">,</span> <span class="n">words</span><span class="p">,</span> <span class="n">like</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">decode_utterance_lattice_faster</span><span class="p">(</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="n">decoder</span><span class="p">,</span> <span class="n">decodable</span><span class="o">=</span><span class="n">decodable</span><span class="p">,</span> <span class="n">trans_model</span><span class="o">=</span><span class="n">tm</span><span class="p">,</span>
+    <span class="n">utt</span><span class="o">=</span><span class="s2">"utt1"</span><span class="p">,</span> <span class="n">allow_partial</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">acoustic_scale</span><span class="o">=</span><span class="mf">0.083</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="score-the-lattice-lm-weights-word-penalties">
+<h2>5. Score the lattice (lm weights / word penalties)<a class="headerlink" href="#score-the-lattice-lm-weights-word-penalties" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">lat</span></code> is returned exactly as kaldi writes <code class="docutils literal notranslate"><span class="pre">lat.gz</span></code> (acoustic costs
+divided by <code class="docutils literal notranslate"><span class="pre">acoustic_scale</span></code>).  To sweep lm weights and word insertion
+penalties like kaldi's <code class="docutils literal notranslate"><span class="pre">local/score.sh</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">best</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">for</span> <span class="n">lmwt</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">):</span>
+    <span class="n">ok</span><span class="p">,</span> <span class="n">ali</span><span class="p">,</span> <span class="n">words</span><span class="p">,</span> <span class="n">like</span> <span class="o">=</span> <span class="n">kd</span><span class="o">.</span><span class="n">lattice_best_path</span><span class="p">(</span>
+        <span class="n">lat</span><span class="p">,</span> <span class="n">lm_scale</span><span class="o">=</span><span class="n">lmwt</span><span class="p">,</span> <span class="n">acoustic_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">best</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">like</span> <span class="o">&gt;</span> <span class="n">best</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="p">(</span><span class="n">like</span><span class="p">,</span> <span class="n">lmwt</span><span class="p">,</span> <span class="n">words</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"best lmwt:"</span><span class="p">,</span> <span class="n">best</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">"words:"</span><span class="p">,</span> <span class="n">best</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="choosing-beam-settings">
+<h2>Choosing beam settings<a class="headerlink" href="#choosing-beam-settings" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">beam</span></code> -- width of the active-token beam (more = slower, more accurate).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lattice_beam</span></code> -- how much worse than the best path an alternative may
+be to stay in the output lattice.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_active</span></code> / <code class="docutils literal notranslate"><span class="pre">min_active</span></code> -- hard cap / floor on active tokens per
+frame (the decoder adapts the effective beam between them).</p></li>
+</ul>
+<p>kaldi's typical settings for GMM decoding are <code class="docutils literal notranslate"><span class="pre">beam=13.0</span></code>,
+<code class="docutils literal notranslate"><span class="pre">lattice_beam=6.0</span></code>, <code class="docutils literal notranslate"><span class="pre">max_active=7000</span></code>; for alignment
+<code class="docutils literal notranslate"><span class="pre">beam=200</span></code> (see <a class="reference internal" href="alignment.html"><span class="doc">Forced alignment</span></a>).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="alignment.html" class="btn btn-neutral float-right" title="Forced alignment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2026, Next-gen Kaldi development team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
