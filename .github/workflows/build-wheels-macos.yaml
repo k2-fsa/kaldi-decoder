@@ -16,11 +16,15 @@ concurrency:
 jobs:
   build_wheels:
     name: ${{ matrix.python-version }} ${{ matrix.arch }}
-    runs-on: ${{ matrix.os }}
+    # The x86_64 wheel must be smoke-tested on a real x86_64 interpreter:
+    # on the arm64 runner the x64 toolcache Pythons are universal2 and run
+    # as arm64 (so pip rejects an x86_64 wheel), and the 3.8/3.9 x64-only
+    # builds crash on the Intel-Homebrew gettext dylib. Same trick as the
+    # macOS x64 rows of test-pip-install.yaml.
+    runs-on: ${{ matrix.arch == 'x86_64' && 'macos-15-intel' || 'macos-latest' }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
         python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314", "cp315"]
         arch: ["arm64", "x86_64", "universal2"]
 

@@ -36,6 +36,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm, macos-15-intel]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+        exclude:
+          # actions/setup-python has no 3.8/3.9 builds for Ubuntu 26.04
+          # (ubuntu-latest), same as the windows-11-arm exclusions in
+          # windows.yaml; the other four OSes still cover 3.8/3.9.
+          - os: ubuntu-latest
+            python-version: "3.8"
+          - os: ubuntu-latest
+            python-version: "3.9"
       fail-fast: false
     steps:
       - uses: actions/checkout@v7
