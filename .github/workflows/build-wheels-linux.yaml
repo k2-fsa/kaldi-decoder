@@ -124,7 +124,13 @@ jobs:
       # Install the wheel we just built and exercise it before anything is
       # uploaded. This runs on the runner -- not in a container -- so a wheel
       # that cannot load must not reach PyPI.
+      #
+      # EOL CPythons (3.8/3.9) have no setup-python builds for the newest
+      # runner images (e.g. Ubuntu 26.04); when the interpreter is missing
+      # the smoke test is skipped and only the wheel build is relied on.
       - name: Setup Python ${{ matrix.python-short }} for the smoke test
+        id: smoke-python
+        continue-on-error: true
         uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-short }}
@@ -133,7 +139,14 @@ jobs:
           # and an x86_64 wheel will not install on an arm64 macOS runner.
           architecture: x64
 
+      - name: Warn about the skipped smoke test
+        if: steps.smoke-python.outcome != 'success'
+        shell: bash
+        run: |
+          echo "::warning::Python ${{ matrix.python-short }} is not available on this runner; smoke test skipped"
+
       - name: Install the wheel
+        if: steps.smoke-python.outcome == 'success'
         shell: bash
         run: |
           python3 -m pip install --force-reinstall ./wheelhouse/*.whl
@@ -143,6 +156,7 @@ jobs:
           python3 -m pip install --force-reinstall -U kaldifst
 
       - name: Smoke test
+        if: steps.smoke-python.outcome == 'success'
         shell: bash
         run: |
           # Run from outside the source tree so `import kaldi_decoder`
