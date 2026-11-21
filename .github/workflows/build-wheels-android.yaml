@@ -27,8 +27,8 @@ jobs:
           # toolchain involved. Same approach as sherpa-onnx and
           # piper-phonemize.
           #
-          # aarch64 + arm run on an ARM host so no qemu is needed; i686 +
-          # x86_64 run on the x64 host.
+          # aarch64 + arm run on an ARM host so no qemu is needed; x86_64
+          # runs on the x64 host.
           - abi: aarch64
             os: ubuntu-24.04-arm
             docker: aarch64
@@ -43,11 +43,6 @@ jobs:
             # through the pybind11 sources. -j1 halves peak memory and keeps
             # make from creating a jobserver at all.
             makejobs: "-j1"
-          - abi: i686
-            os: ubuntu-latest
-            docker: i686
-            plat: android_24_x86
-            makejobs: "-j$(nproc)"
           - abi: x86_64
             os: ubuntu-latest
             docker: x86_64
