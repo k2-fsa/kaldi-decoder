@@ -58,13 +58,33 @@ function(download_kaldifst)
 
   add_subdirectory(${kaldifst_SOURCE_DIR} ${kaldifst_BINARY_DIR} EXCLUDE_FROM_ALL)
 
+  # Hide the bundled openfst + kaldifst symbols unconditionally.  Their
+  # FstRegister registry singletons are weak template statics: exported,
+  # they coalesce process-wide with any other module bundling openfst
+  # (kaldifst, kaldi-hmm-gmm), and the surviving registry may lack types
+  # another module registered (vosk's olabel_lookahead/ngram graphs then
+  # fail to read).  Hidden: each module keeps its own registry; FSTs
+  # still cross module boundaries by raw pointer (python/csrc/fst-caster.h),
+  # which does not rely on symbol sharing.  Contract unchanged: all
+  # modules must bundle the same openfst sources/flags (same layouts).
+  set_target_properties(kaldifst_core
+    PROPERTIES
+      POSITION_INDEPENDENT_CODE ON
+      C_VISIBILITY_PRESET hidden
+      CXX_VISIBILITY_PRESET hidden
+  )
+  foreach(_t fst fstscript fstlookahead fstngram)
+    if(TARGET ${_t})
+      set_target_properties(${_t}
+        PROPERTIES
+          POSITION_INDEPENDENT_CODE ON
+          C_VISIBILITY_PRESET hidden
+          CXX_VISIBILITY_PRESET hidden
+      )
+    endif()
+  endforeach()
+
   if(_build_shared_libs_bak)
-    set_target_properties(kaldifst_core
-      PROPERTIES
-        POSITION_INDEPENDENT_CODE ON
-        C_VISIBILITY_PRESET hidden
-        CXX_VISIBILITY_PRESET hidden
-    )
     set(BUILD_SHARED_LIBS ON)
   endif()
 
