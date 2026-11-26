@@ -32,6 +32,15 @@ void PybindTransitionInformation(py::module *m);
 // Contract: every module in the process must be built against the same
 // transition-information.h (the object stays owned by the module that
 // created it; we only borrow its address).
+//
+// NOTE the pybind11_platform_abi_id is deliberately NOT compared (unlike
+// the default provider): that id embeds _GLIBCXX_USE_CXX11_ABI, and the
+// wheels legitimately differ there (kaldi-hmm-gmm builds on manylinux2014
+// -> 0, kaldi-decoder on manylinux_2_27 -> 1).  TransitionInformation
+// exchanges only ints/bools and std::vector<int32_t> references -- no
+// std::string -- so it is ABI-identical across the two modes, and we
+// trust the contract above instead of the id (fst-caster.h takes the
+// same route for openfst types).
 inline py::object TransitionInformationConduitMethod(
     py::handle self, const py::bytes &pybind11_platform_abi_id,
     const py::capsule &cpp_type_info_capsule, const py::bytes &pointer_kind) {
@@ -40,8 +49,7 @@ inline py::object TransitionInformationConduitMethod(
 #else
   using cpp_str = std::string;
 #endif
-  if (cpp_str(pybind11_platform_abi_id) == PYBIND11_PLATFORM_ABI_ID &&
-      std::strcmp(cpp_type_info_capsule.name(),
+  if (std::strcmp(cpp_type_info_capsule.name(),
                   typeid(std::type_info).name()) == 0 &&
       cpp_str(pointer_kind) == "raw_pointer_ephemeral") {
     const auto *requested =
