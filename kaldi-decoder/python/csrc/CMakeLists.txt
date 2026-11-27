@@ -8,6 +8,7 @@ set(srcs
   faster-decoder.cc
   kaldi-decoder.cc
   lattice-faster-decoder.cc
+  lattice-faster-online-decoder.cc
   lattice-simple-decoder.cc
   simple-decoder.cc
   transition-information.cc

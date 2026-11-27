@@ -20,5 +20,6 @@ kaldi-flag mapping table, and the full API reference.
    faster_decoder
    lattice_simple_decoder
    lattice_faster_decoder
+   lattice_faster_online_decoder
    decoder_wrappers
    reference

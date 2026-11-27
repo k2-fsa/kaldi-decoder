@@ -38,6 +38,7 @@ set(py_test_files
   test_decodable_matrix.py
   test_decoders.py
   test_fst_interop.py
+  test_lattice_faster_online_decoder.py
   test_lifetime.py
 )
 

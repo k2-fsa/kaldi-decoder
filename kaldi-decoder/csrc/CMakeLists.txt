@@ -10,6 +10,7 @@ set(srcs
   eigen.cc
   faster-decoder.cc
   lattice-faster-decoder.cc
+  lattice-faster-online-decoder.cc
   lattice-simple-decoder.cc
   simple-decoder.cc
 )
@@ -38,6 +39,7 @@ if(KALDI_DECODER_ENABLE_TESTS)
     faster-decoder-test.cc
     hash-list-test.cc
     lattice-faster-decoder-test.cc
+    lattice-faster-online-decoder-test.cc
     lattice-simple-decoder-test.cc
     simple-decoder-test.cc
   )

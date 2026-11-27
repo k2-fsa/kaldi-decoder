@@ -10,6 +10,7 @@
 #include "kaldi-decoder/python/csrc/decoder-wrappers.h"
 #include "kaldi-decoder/python/csrc/faster-decoder.h"
 #include "kaldi-decoder/python/csrc/lattice-faster-decoder.h"
+#include "kaldi-decoder/python/csrc/lattice-faster-online-decoder.h"
 #include "kaldi-decoder/python/csrc/lattice-simple-decoder.h"
 #include "kaldi-decoder/python/csrc/simple-decoder.h"
 #include "kaldi-decoder/python/csrc/transition-information.h"
@@ -23,6 +24,7 @@ PYBIND11_MODULE(_kaldi_decoder, m) {
   PybindDecodableMatrix(&m);
   PybindFasterDecoder(&m);
   PybindLatticeFasterDecoder(&m);
+  PybindLatticeFasterOnlineDecoder(&m);
   PybindLatticeSimpleDecoder(&m);
   PybindSimpleDecoder(&m);
   PybindDecodableCtc(&m);
