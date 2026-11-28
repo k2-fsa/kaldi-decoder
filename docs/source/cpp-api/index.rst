@@ -20,4 +20,5 @@ doxygen HTML linked above.
    faster_decoder
    lattice_simple_decoder
    lattice_faster_decoder
+   lattice_faster_online_decoder
    decoder_wrappers

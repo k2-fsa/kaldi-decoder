@@ -15,6 +15,8 @@
 //   _vector_fst_addr(fst)        -> uint64_t   (raw C++ address)
 //   _vector_fst_borrow(addr)     -> StdVectorFst  (non-owning wrapper)
 //   _vector_fst_take(addr)       -> StdVectorFst  (owning wrapper)
+//   _fst_addr(fst)               -> uint64_t   (generic Fst, e.g. a lazy
+//   _fst_borrow/_fst_take        ->            LookaheadComposeFst)
 //
 // Contract (ABI convention): every module in the process must be built
 // against the same openfst version and ABI-relevant flags (e.g.

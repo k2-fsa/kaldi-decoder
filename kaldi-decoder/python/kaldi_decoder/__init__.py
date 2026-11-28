@@ -10,6 +10,7 @@ from kaldi_decoder.lib._kaldi_decoder import (
     FasterDecoderOptions,
     LatticeFasterDecoder,
     LatticeFasterDecoderConfig,
+    LatticeFasterOnlineDecoder,
     LatticeSimpleDecoder,
     LatticeSimpleDecoderConfig,
     SimpleDecoder,

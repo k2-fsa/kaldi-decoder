@@ -120,6 +120,15 @@ transition.)doc")
       .def("num_pdfs", &PyClass::NumPdfs, R"doc(Number of distinct pdfs.)doc")
       .def("num_transition_ids", &PyClass::NumTransitionIds,
            R"doc(Number of transition-ids (``len(tid_to_pdf) - 1``).)doc");
+  // Replace the class_'s default conduit provider with the name-matching
+  // one (see transition-information.h): works across hidden-visibility
+  // module boundaries, unlike the default.  py::prepend is required:
+  // class_ already installed the default provider under this name, and a
+  // second def() would APPEND to the overload chain -- the default runs
+  // first and returns None, which counts as a successful call and would
+  // shadow this one.
+  cls.def("_pybind11_conduit_v1_", TransitionInformationConduitMethod,
+          py::prepend());
   cls.attr("__module__") = "kaldi_decoder";
 }
 
